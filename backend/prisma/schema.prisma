@@ -1,0 +1,41 @@
+// See docs/plan.md Section 4 for the full schema rationale.
+// This is a starting skeleton — expand as each module's owner builds it out.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id                  String   @id @default(uuid())
+  name                String
+  allowedEmailDomains String[]
+  createdAt           DateTime @default(now())
+
+  users User[]
+
+  @@map("universities")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  universityId String   @map("university_id")
+  name         String
+  email        String   @unique
+  department   String?
+  role         String   @default("student") // "student" | "university_admin" | "super_admin"
+  passwordHash String   @map("password_hash")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now())
+
+  university University @relation(fields: [universityId], references: [id])
+
+  @@map("users")
+}
+
+// TODO (module owners): Listing, TutorProfile, Booking, Conversation,
+// Message, Transaction, Report, Review models — see docs/plan.md Section 4.
