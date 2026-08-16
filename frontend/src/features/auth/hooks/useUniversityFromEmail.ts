@@ -70,6 +70,10 @@ export function validateEmail(value: string): string | undefined {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     return 'Enter a valid email address.';
   }
+  const domain = extractEmailDomain(value);
+  if (domain && domain.toLowerCase().endsWith('insa.edu.et')) {
+    return 'Emails from INSA are not allowed.';
+  }
   return undefined;
 }
 

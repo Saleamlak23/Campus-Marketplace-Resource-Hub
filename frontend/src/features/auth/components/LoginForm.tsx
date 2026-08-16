@@ -108,12 +108,6 @@ export default function LoginForm() {
           Sign up
         </Link>
       </p>
-
-      <div className="mt-6 rounded-lg bg-surface-muted p-4 text-xs text-text-muted">
-        <p className="font-medium text-text">Demo credentials (mock mode)</p>
-        <p className="mt-1">Student: student@insa.edu.et / password123</p>
-        <p>Admin: admin@insa.edu.et / password123</p>
-      </div>
     </Card>
   );
 }
