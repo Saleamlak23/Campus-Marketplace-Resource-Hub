@@ -40,6 +40,7 @@ model User {
   role             UserRole @default(STUDENT)
   isBanned         Boolean  @default(false)
   banReason        String?
+  isVerified       Boolean  @default(false) // ✅ NEW FIELD
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -53,6 +54,7 @@ model User {
   reports          Report[]
   reviewsGiven     Review[] @relation("reviewsGiven")
   reviewsReceived  Review[] @relation("reviewsReceived")
+  verificationTokens VerificationToken[] // ✅ NEW RELATION
   
   @@index([universityId])
   @@index([email])
@@ -63,6 +65,20 @@ enum UserRole {
   STUDENT
   UNIVERSITY_ADMIN
   SUPER_ADMIN
+}
+
+// ============= VERIFICATION TOKENS =============
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@map("verification_tokens")
 }
 
 // ============= LISTINGS =============
@@ -220,7 +236,6 @@ model Transaction {
   
   @@index([userId])
   @@index([status])
-  @@index([relatedId])
   @@map("transactions")
 }
 
