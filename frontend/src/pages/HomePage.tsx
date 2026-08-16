@@ -35,7 +35,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link to="/login">
-                <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
+                <Button variant="primary" size="lg" className="border-white/30 text-white hover:bg-white/10">
                   Log in
                 </Button>
               </Link>
