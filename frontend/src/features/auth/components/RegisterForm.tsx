@@ -20,18 +20,35 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
   department?: string;
+  year?: string;
+  customDepartment?: string;
   form?: string;
 }
 
 const departmentOptions = [
+  { value: 'Software Engineering', label: 'Software Engineering' },
   { value: 'Computer Science', label: 'Computer Science' },
-  { value: 'Electrical Engineering', label: 'Electrical Engineering' },
+  { value: 'Information Technology', label: 'Information Technology' },
+  { value: 'Information Systems', label: 'Information Systems' },
+  { value: 'Electrical & Computer Engineering', label: 'Electrical & Computer Engineering' },
   { value: 'Mechanical Engineering', label: 'Mechanical Engineering' },
-  { value: 'Business', label: 'Business' },
+  { value: 'Civil Engineering', label: 'Civil Engineering' },
+  { value: 'Chemical Engineering', label: 'Chemical Engineering' },
+  { value: 'Biomedical Engineering', label: 'Biomedical Engineering' },
+  { value: 'Medicine', label: 'Medicine' },
+  { value: 'Pharmacy', label: 'Pharmacy' },
+  { value: 'Nursing', label: 'Nursing' },
+  { value: 'Public Health', label: 'Public Health' },
+  { value: 'Business Administration', label: 'Business Administration' },
+  { value: 'Accounting & Finance', label: 'Accounting & Finance' },
+  { value: 'Economics', label: 'Economics' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Law', label: 'Law' },
+  { value: 'Architecture', label: 'Architecture' },
   { value: 'Other', label: 'Other' },
 ];
 
-const yearOptions = Array.from({ length: 5 }, (_, index) => ({
+const yearOptions = Array.from({ length: 9 }, (_, index) => ({
   value: String(index + 1),
   label: `Year ${index + 1}`,
 }));
@@ -44,11 +61,12 @@ export default function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [universityIdNumber, setUniversityIdNumber] = useState('');
   const [department, setDepartment] = useState('');
+  const [customDepartment, setCustomDepartment] = useState('');
   const [year, setYear] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { detectedUniversity, domain, isDomainSupported, supportedDomains } =
+  const { detectedUniversity, domain, isDomainSupported } =
     useUniversityFromEmail(email);
 
   function validateConfirmPassword(value: string): string | undefined {
@@ -69,10 +87,12 @@ export default function RegisterForm() {
       email: validateEmail(email),
       password: validatePassword(password),
       confirmPassword: validateConfirmPassword(confirmPassword),
+      department: department ? undefined : 'Please select your department.',
+      year: year ? undefined : 'Please select your year.',
     };
 
-    if (email && isDomainSupported === false) {
-      nextErrors.email = 'This email domain is not registered with any university on the platform.';
+    if (department === 'Other' && !customDepartment.trim()) {
+      nextErrors.department = 'Please enter your department.';
     }
 
     const hasErrors = Object.values(nextErrors).some(Boolean);
@@ -90,7 +110,7 @@ export default function RegisterForm() {
         email: email.trim().toLowerCase(),
         password,
         universityIdNumber: universityIdNumber.trim() || undefined,
-        department: department || undefined,
+        department: department === 'Other' ? customDepartment.trim() : department || undefined,
         year: year ? Number(year) : undefined,
       });
     } catch (error) {
@@ -147,11 +167,6 @@ export default function RegisterForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             error={errors.email}
-            hint={
-              supportedDomains.length > 0
-                ? `Supported domains include: ${supportedDomains.slice(0, 3).join(', ')}`
-                : undefined
-            }
             required
           />
           {domain && detectedUniversity && (
@@ -175,27 +190,42 @@ export default function RegisterForm() {
         <Input
           label="University ID (optional)"
           name="universityIdNumber"
-          placeholder="e.g. INSA/2024/001"
+          placeholder="Enter your ID"
           value={universityIdNumber}
           onChange={(event) => setUniversityIdNumber(event.target.value)}
         />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Select
-            label="Department (optional)"
+            label="Department"
             name="department"
             value={department}
             onChange={(event) => setDepartment(event.target.value)}
             options={departmentOptions}
             placeholder="Select department"
+            required
+            error={errors.department}
           />
+          {department === 'Other' && (
+            <Input
+              label="Specify department"
+              name="customDepartment"
+              placeholder="Your department"
+              value={customDepartment}
+              onChange={(e) => setCustomDepartment(e.target.value)}
+              error={errors.department}
+              required
+            />
+          )}
           <Select
-            label="Year (optional)"
+            label="Year"
             name="year"
             value={year}
             onChange={(event) => setYear(event.target.value)}
             options={yearOptions}
             placeholder="Select year"
+            required
+            error={errors.year}
           />
         </div>
 
@@ -223,12 +253,7 @@ export default function RegisterForm() {
           required
         />
 
-        <Button
-          type="submit"
-          className="w-full"
-          isLoading={isSubmitting}
-          disabled={isDomainSupported === false}
-        >
+        <Button type="submit" className="w-full" isLoading={isSubmitting}>
           Create account
         </Button>
       </form>
