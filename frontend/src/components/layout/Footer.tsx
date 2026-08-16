@@ -10,13 +10,13 @@ export default function Footer() {
           © {year} Campus Marketplace & Resource Hub. Built for university communities.
         </p>
         <div className="flex gap-6 text-sm">
-          <Link to="/" className="text-text-muted transition-colors hover:text-text">
+          <Link to="/" className="text-text-muted text-nowrap transition-colors hover:text-text">
             Home
           </Link>
-          <Link to="/login" className="text-text-muted transition-colors hover:text-text">
+          <Link to="/login" className="text-text-muted text-nowrap transition-colors hover:text-text">
             Log in
           </Link>
-          <Link to="/register" className="text-text-muted transition-colors hover:text-text">
+          <Link to="/register" className="text-text-muted text-nowrap transition-colors hover:text-text">
             Sign up
           </Link>
         </div>
