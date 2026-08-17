@@ -16,7 +16,8 @@ model University {
   allowedEmailDomains String[]
   createdAt           DateTime @default(now())
 
-  users User[]
+  users    User[]
+  listings Listing[] // <--- ADDED RELATION
 
   @@map("universities")
 }
@@ -33,9 +34,33 @@ model User {
   createdAt    DateTime @default(now())
 
   university University @relation(fields: [universityId], references: [id])
+  listings   Listing[]  // <--- ADDED RELATION
 
   @@map("users")
 }
 
-// TODO (module owners): Listing, TutorProfile, Booking, Conversation,
-// Message, Transaction, Report, Review models — see docs/plan.md Section 4.
+enum ListingStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Listing {
+  id           String        @id @default(uuid())
+  universityId String        @map("university_id")
+  sellerId     String        @map("seller_id")
+  title        String
+  description  String
+  category     String
+  price        Float
+  condition    String
+  department   String
+  status       ListingStatus @default(AVAILABLE)
+  images       String[]      @default([])
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  university University @relation(fields: [universityId], references: [id])
+  seller     User       @relation(fields: [sellerId], references: [id])
+
+  @@map("listings")
+}
