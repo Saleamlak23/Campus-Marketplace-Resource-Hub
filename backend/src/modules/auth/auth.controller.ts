@@ -19,15 +19,7 @@ export class AuthController {
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       console.error('[Register] Error:', error);
-      if (error instanceof Error) {
-        res.status(500).json({ 
-          success: false, 
-          error: error.message,
-          stack: error.stack 
-        });
-      } else {
-        res.status(500).json({ success: false, error: 'Internal server error' });
-      }
+      next(error);
     }
   }
 
@@ -42,15 +34,7 @@ export class AuthController {
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       console.error('[Login] Error:', error);
-      if (error instanceof Error) {
-        res.status(500).json({ 
-          success: false, 
-          error: error.message,
-          stack: error.stack 
-        });
-      } else {
-        res.status(500).json({ success: false, error: 'Internal server error' });
-      }
+      next(error);
     }
   }
 
@@ -61,15 +45,63 @@ export class AuthController {
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       console.error('[Refresh] Error:', error);
-      if (error instanceof Error) {
-        res.status(500).json({ 
-          success: false, 
-          error: error.message,
-          stack: error.stack 
-        });
-      } else {
-        res.status(500).json({ success: false, error: 'Internal server error' });
+      next(error);
+    }
+  }
+
+  async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.body;
+      if (!token) {
+        return res.status(400).json({ success: false, error: 'Token is required' });
       }
+      const result = await authService.verifyEmail(token);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      console.error('[VerifyEmail] Error:', error);
+      next(error);
+    }
+  }
+
+  async resendVerification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, error: 'Email is required' });
+      }
+      const result = await authService.resendVerificationEmail(email);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      console.error('[ResendVerification] Error:', error);
+      next(error);
+    }
+  }
+
+  async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, error: 'Email is required' });
+      }
+      const result = await authService.requestPasswordReset(email);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      console.error('[RequestPasswordReset] Error:', error);
+      next(error);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        return res.status(400).json({ success: false, error: 'Token and new password are required' });
+      }
+      const result = await authService.resetPassword(token, newPassword);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      console.error('[ResetPassword] Error:', error);
+      next(error);
     }
   }
 }
