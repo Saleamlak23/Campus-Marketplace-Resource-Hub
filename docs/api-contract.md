@@ -26,12 +26,18 @@ moment any endpoint shape changes.
 
 ## Tutoring / Bookings
 - GET /api/tutors
+- PUT /api/tutors/me
+- GET /api/bookings
 - POST /api/bookings
 - PATCH /api/bookings/:id
 
 ## Chat
 - GET /api/conversations
-- WebSocket /socket (see chat.socket.ts)
+- POST /api/conversations
+- GET /api/conversations/:id
+- POST /api/conversations/:id/messages
+- WebSocket /socket (authenticated with `auth.token`): `join_conversation`,
+  `send_message`, and `mark_read` events (see `chat.socket.ts`)
 
 ## Payments
 - POST /api/payments/initiate

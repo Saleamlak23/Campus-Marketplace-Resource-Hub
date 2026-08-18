@@ -1,23 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
+import { ListingCategory } from '@prisma/client';
 import * as listingService from './listings.service.js';
 
-// Extend Express Request to include authenticated user if needed
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    universityId: string;
-    role: string;
-  };
+function routeId(req: Request) {
+  const { id } = req.params;
+  if (typeof id !== 'string') throw new Error('Invalid route identifier');
+  return id;
 }
 
 // 1. Create a listing
 export async function createListingHandler(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const universityId = req.user?.universityId;
 
     if (!userId || !universityId) {
@@ -38,7 +36,7 @@ export async function createListingHandler(
 
 // 2. Get listings with search & filters (University-scoped)
 export async function getListingsHandler(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -51,10 +49,15 @@ export async function getListingsHandler(
 
     const { search, category, department, minPrice, maxPrice } = req.query;
 
+    const requestedCategory = category ? String(category) : undefined;
+    const validCategory = requestedCategory && Object.values(ListingCategory).includes(requestedCategory as ListingCategory)
+      ? requestedCategory as ListingCategory
+      : undefined;
+
     const listings = await listingService.getListings({
       universityId,
       search: search ? String(search) : undefined,
-      category: category ? String(category) : undefined,
+      category: validCategory,
       department: department ? String(department) : undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
@@ -68,13 +71,12 @@ export async function getListingsHandler(
 
 // 3. Get listing by ID
 export async function getListingByIdHandler(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const { id } = req.params;
-    const listing = await listingService.getListingById(id);
+    const listing = await listingService.getListingById(routeId(req));
 
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
@@ -88,13 +90,13 @@ export async function getListingByIdHandler(
 
 // 4. Update a listing (Seller ownership check)
 export async function updateListingHandler(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const id = routeId(req);
+    const userId = req.user?.userId;
 
     const existingListing = await listingService.getListingById(id);
     if (!existingListing) {
@@ -115,13 +117,13 @@ export async function updateListingHandler(
 
 // 5. Delete a listing (Seller ownership check)
 export async function deleteListingHandler(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const id = routeId(req);
+    const userId = req.user?.userId;
 
     const existingListing = await listingService.getListingById(id);
     if (!existingListing) {

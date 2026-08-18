@@ -6,6 +6,8 @@ import { authenticate } from './middleware/authenticate';
 import { authorize, isAdmin, isSuperAdmin } from './middleware/authorize';
 import { scopeByUniversity } from './middleware/universityScoping';
 import authRoutes from './modules/auth/auth.routes';
+import chatRoutes from './modules/chat/chat.routes';
+import tutoringRoutes from './modules/tutoring/tutoring.routes';
 import prisma from './lib/prisma';
 
 const app = express();
@@ -76,6 +78,8 @@ app.post('/api/debug', (req, res) => {
 
 // Auth routes - register, login, refresh
 app.use('/api/auth', authRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', tutoringRoutes);
 
 // ============================================
 // PROTECTED ROUTES (Examples)

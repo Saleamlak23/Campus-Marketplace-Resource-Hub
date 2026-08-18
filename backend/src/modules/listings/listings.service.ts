@@ -1,12 +1,12 @@
-import { prisma } from '../../lib/prisma.js';
-import { ListingStatus } from '@prisma/client';
+import prisma from '../../lib/prisma.js';
+import { ListingCategory, ListingCondition, ListingStatus } from '@prisma/client';
 
 export interface CreateListingInput {
   title: string;
   description: string;
-  category: string;
+  category: ListingCategory;
   price: number;
-  condition: string;
+  condition: ListingCondition;
   department: string;
   images?: string[];
   sellerId: string;
@@ -16,7 +16,7 @@ export interface CreateListingInput {
 export interface GetListingsFilter {
   universityId: string;
   search?: string;
-  category?: string;
+  category?: ListingCategory;
   department?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -25,9 +25,9 @@ export interface GetListingsFilter {
 export interface UpdateListingInput {
   title?: string;
   description?: string;
-  category?: string;
+  category?: ListingCategory;
   price?: number;
-  condition?: string;
+  condition?: ListingCondition;
   department?: string;
   images?: string[];
   status?: ListingStatus;
