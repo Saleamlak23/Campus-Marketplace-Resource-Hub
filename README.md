@@ -1,4 +1,4 @@
-# Campus Marketplace & Resource Hub
+# Campus Marketplace & Resource Hubss
 
 A full-stack web platform for university students to buy and sell textbooks,
 find tutors, and share past exam papers — built to support multiple
