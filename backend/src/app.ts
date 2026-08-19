@@ -8,6 +8,7 @@ import { scopeByUniversity } from './middleware/universityScoping';
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
 import universitiesRoutes from './modules/universities/universities.routes';
+import adminRoutes from './modules/admin/admin.routes';
 import prisma from './lib/prisma';
 
 const app = express();
@@ -25,13 +26,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-  console.log(`📡 ${req.method} ${req.url}`);
+  console.log('Request:', req.method, req.url);
   next();
 });
-
-// ============================================
-// HEALTH CHECK
-// ============================================
 
 app.get('/health', (req, res) => {
   res.json({
@@ -78,6 +75,14 @@ app.use('/api/universities', universitiesRoutes);
 // PROTECTED PROFILE ROUTE
 // ============================================
 
+  res.json({ status: 'ok', environment: config.nodeEnv, timestamp: new Date().toISOString() });
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/universities', universitiesRoutes);
+app.use('/api/admin', adminRoutes);
+
 app.get('/api/profile', authenticate, scopeByUniversity, async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -112,15 +117,8 @@ app.get('/api/profile', authenticate, scopeByUniversity, async (req, res) => {
 // ============================================
 
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: `Route ${req.method} ${req.url} not found`,
-  });
+  res.status(404).json({ success: false, error: 'Route not found' });
 });
-
-// ============================================
-// ERROR HANDLING
-// ============================================
 
 app.use(errorHandler);
 

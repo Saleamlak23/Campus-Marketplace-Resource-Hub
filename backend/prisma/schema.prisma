@@ -1,3 +1,6 @@
+// See docs/plan.md Section 4 for the full schema rationale.
+// This is a starting skeleton — expand as each module's owner builds it out.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +11,7 @@ datasource db {
 }
 
 model University {
-  id                  String   @id @default(cuid())
+  id                  String   @id @default(uuid())
   name                String
   allowedEmailDomains String[]
   createdAt           DateTime @default(now())
@@ -236,11 +239,9 @@ enum TransactionType {
   TUTORING_BOOKING
 }
 
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
+  users User[]
+
+  @@map("universities")
 }
 
 model Report {
@@ -264,19 +265,20 @@ model Report {
   @@index([status])
   @@map("reports")
 }
+model User {
+  id           String   @id @default(uuid())
+  universityId String   @map("university_id")
+  name         String
+  email        String   @unique
+  department   String?
+  role         String   @default("student") // "student" | "university_admin" | "super_admin"
+  passwordHash String   @map("password_hash")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now())
 
-enum ReportTarget {
-  LISTING
-  USER
-  TUTOR_PROFILE
-  MESSAGE
-}
+  university University @relation(fields: [universityId], references: [id])
 
-enum ReportStatus {
-  PENDING
-  REVIEWED
-  DISMISSED
-  ACTION_TAKEN
+  @@map("users")
 }
 
 model Review {
@@ -295,3 +297,5 @@ model Review {
   @@index([targetUserId])
   @@map("reviews")
 }
+// TODO (module owners): Listing, TutorProfile, Booking, Conversation,
+// Message, Transaction, Report, Review models — see docs/plan.md Section 4.

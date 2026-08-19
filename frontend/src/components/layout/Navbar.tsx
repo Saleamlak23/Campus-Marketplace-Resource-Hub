@@ -24,14 +24,22 @@ export default function Navbar() {
               Campus Marketplace
             </span>
           </Link>
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+          <nav
+            className="hidden items-center gap-1 md:flex"
+            aria-label="Main navigation"
+          >
             <NavLink to="/" className={navLinkClass} end>
               Home
             </NavLink>
             {isAuthenticated && (
-              <NavLink to="/dashboard" className={navLinkClass}>
-                Dashboard
-              </NavLink>
+              <>
+                <NavLink to="/listings" className={navLinkClass}>
+                  Browse
+                </NavLink>
+                <NavLink to="/dashboard" className={navLinkClass}>
+                  Dashboard
+                </NavLink>
+              </>
             )}
           </nav>
         </div>
