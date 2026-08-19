@@ -10,3 +10,15 @@ export type {
   UniversitiesResponse,
   UserProfileResponse,
 } from './auth';
+export type {
+  Listing,
+  ListingSeller,
+  ListingCategory,
+  ListingCondition,
+  ListingStatus,
+  ListingsQuery,
+  ListingsResponse,
+  ListingResponse,
+  CreateListingRequest,
+  UpdateListingRequest,
+} from './listing';

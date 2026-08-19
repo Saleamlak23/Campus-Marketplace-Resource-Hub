@@ -1,9 +1,18 @@
+import { Link } from 'react-router-dom';
 import Badge from '../components/common/Badge';
 import Card from '../components/common/Card';
+import { useMyListingsQuery } from '../features/listings/hooks/useListings';
 import { useAuthStore } from '../store/authStore';
 
 export default function DashboardPage() {
   const { user, university } = useAuthStore();
+  const { data: myListings, isLoading: isLoadingListings } = useMyListingsQuery(
+    user?.id,
+  );
+
+  const activeListingsCount = myListings?.listings.filter(
+    (l) => l.status === 'available',
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -21,20 +30,30 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <p className="text-sm text-text-muted">Active listings</p>
-          <p className="mt-2 text-3xl font-bold text-text">—</p>
-          <p className="mt-1 text-xs text-text-muted">Available after Listings UI (Task B)</p>
-        </Card>
+        <Link to="/dashboard/listings">
+          <Card hoverable>
+            <p className="text-sm text-text-muted">Active listings</p>
+            <p className="mt-2 text-3xl font-bold text-text">
+              {isLoadingListings ? '—' : (activeListingsCount ?? 0)}
+            </p>
+            <p className="mt-1 text-xs text-text-muted">
+              View and manage your listings
+            </p>
+          </Card>
+        </Link>
         <Card>
           <p className="text-sm text-text-muted">Unread messages</p>
           <p className="mt-2 text-3xl font-bold text-text">—</p>
-          <p className="mt-1 text-xs text-text-muted">Available after Chat UI (Task C)</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Available after Chat UI (Task C)
+          </p>
         </Card>
         <Card>
           <p className="text-sm text-text-muted">Tutoring bookings</p>
           <p className="mt-2 text-3xl font-bold text-text">—</p>
-          <p className="mt-1 text-xs text-text-muted">Available after Tutoring UI (Task C)</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Available after Tutoring UI (Task C)
+          </p>
         </Card>
       </div>
 
@@ -51,11 +70,15 @@ export default function DashboardPage() {
           </div>
           <div>
             <dt className="text-text-muted">University ID</dt>
-            <dd className="font-medium text-text">{user?.universityIdNumber ?? '—'}</dd>
+            <dd className="font-medium text-text">
+              {user?.universityIdNumber ?? '—'}
+            </dd>
           </div>
           <div>
             <dt className="text-text-muted">Role</dt>
-            <dd className="font-medium capitalize text-text">{user?.role.replace('_', ' ')}</dd>
+            <dd className="font-medium capitalize text-text">
+              {user?.role.replace('_', ' ')}
+            </dd>
           </div>
         </dl>
       </Card>
