@@ -1,18 +1,25 @@
-import 'dotenv/config';
-import http from 'http';
+import app from './app';
+import { config } from './config/env';
+import { createServer } from 'http';
 import { Server } from 'socket.io';
-import app from './app.js';
-import { registerChatSocket } from './sockets/chat.socket.js';
+import { registerChatSocket } from './sockets/chat.socket';
 
-const PORT = process.env.PORT || 4000;
-
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: process.env.FRONTEND_URL },
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: config.frontendUrl, credentials: true },
 });
-
 registerChatSocket(io);
 
-server.listen(PORT, () => {
-  console.log(`Backend listening on port ${PORT}`);
+const server = httpServer.listen(config.port, () => {
+  console.log(`Server running on http://localhost:${config.port}`);
+  console.log(`Environment: ${config.nodeEnv}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
