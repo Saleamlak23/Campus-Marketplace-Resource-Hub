@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../../lib/prisma';
+import { config } from '../../config/env';
 import { AppError } from '../../middleware/errorHandler';
 import { initializeChapaPayment, verifyChapaPayment, verifyChapaWebhook } from '../../lib/chapa';
 import { chapaWebhookSchema, initiatePaymentSchema } from './payments.validation';

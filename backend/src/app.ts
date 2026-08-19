@@ -6,6 +6,8 @@ import { authenticate } from './middleware/authenticate';
 import { authorize, isAdmin, isSuperAdmin } from './middleware/authorize';
 import { scopeByUniversity } from './middleware/universityScoping';
 import authRoutes from './modules/auth/auth.routes';
+import listingsRoutes from './modules/listings/listings.routes';
+import paymentsRoutes from './modules/payments/payments.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import tutoringRoutes from './modules/tutoring/tutoring.routes';
 import usersRoutes from './modules/users/users.routes';
@@ -81,6 +83,8 @@ app.post('/api/debug', (req, res) => {
 
 // Auth routes - register, login, refresh
 app.use('/api/auth', authRoutes);
+app.use('/api/listings', listingsRoutes);
+app.use('/api/payments', paymentsRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', tutoringRoutes);
 app.use('/api/users', usersRoutes);
