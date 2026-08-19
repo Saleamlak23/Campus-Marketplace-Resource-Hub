@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import { authenticate } from './middleware/authenticate';
+import { isSuperAdmin } from './middleware/authorize';
 import { scopeByUniversity } from './middleware/universityScoping';
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
@@ -12,7 +13,15 @@ import prisma from './lib/prisma';
 
 const app = express();
 
-app.use(cors({ origin: config.frontendUrl, credentials: true }));
+// ============================================
+// MIDDLEWARE
+// ============================================
+
+app.use(cors({
+  origin: config.frontendUrl,
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,6 +31,50 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    environment: config.nodeEnv,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ============================================
+// TEST/DEBUG ENDPOINTS
+// ============================================
+
+app.get('/api/test', (req, res) => {
+  res.json({
+    message: 'API is working!',
+    timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
+  });
+});
+
+app.post('/api/debug', (req, res) => {
+  console.log('🔍 Debug endpoint hit!');
+  res.json({
+    received: req.body,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ============================================
+// API ROUTES
+// ============================================
+
+// Auth routes - register, login, refresh, verify-email
+app.use('/api/auth', authRoutes);
+
+// User routes - /api/users/me (GET/PATCH)
+app.use('/api/users', usersRoutes);
+
+// University routes - /api/universities (GET all/one)
+app.use('/api/universities', universitiesRoutes);
+
+// ============================================
+// PROTECTED PROFILE ROUTE
+// ============================================
+
   res.json({ status: 'ok', environment: config.nodeEnv, timestamp: new Date().toISOString() });
 });
 
@@ -58,6 +111,10 @@ app.get('/api/profile', authenticate, scopeByUniversity, async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to fetch profile' });
   }
 });
+
+// ============================================
+// 404 HANDLER
+// ============================================
 
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });

@@ -16,11 +16,255 @@ model University {
   allowedEmailDomains String[]
   createdAt           DateTime @default(now())
 
+  users              User[]
+  listings           Listing[]
+  tutorProfiles      TutorProfile[]
+  bookings           Booking[]
+  conversations      Conversation[]
+  reports            Report[]
+
+  @@map("universities")
+}
+
+model User {
+  id               String   @id @default(cuid())
+  universityId     String
+  university       University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  name             String
+  email            String   @unique
+  universityIdNumber String?
+  department       String?
+  passwordHash     String
+  avatarUrl        String?
+
+  role             UserRole @default(STUDENT)
+  isBanned         Boolean  @default(false)
+  banReason        String?
+  isVerified       Boolean  @default(false)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  listings         Listing[]
+  tutorProfile     TutorProfile?
+  bookingsAsStudent Booking[] @relation("studentBookings")
+  bookingsAsTutor   Booking[] @relation("tutorBookings")
+  sentMessages     Message[] @relation("sentMessages")
+  transactions     Transaction[]
+  reports          Report[]
+  reviewsGiven     Review[] @relation("reviewsGiven")
+  reviewsReceived  Review[] @relation("reviewsReceived")
+  verificationTokens VerificationToken[]
+
+  @@index([universityId])
+  @@index([email])
+  @@map("users")
+}
+
+enum UserRole {
+  STUDENT
+  UNIVERSITY_ADMIN
+  SUPER_ADMIN
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("verification_tokens")
+}
+
+model Listing {
+  id             String   @id @default(cuid())
+  universityId   String
+  university     University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  sellerId       String
+  seller         User     @relation(fields: [sellerId], references: [id])
+
+  title          String
+  description    String?
+  category       ListingCategory
+  price          Float
+  condition      ListingCondition?
+  department     String?
+  images         String[]
+
+  status         ListingStatus @default(AVAILABLE)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([universityId])
+  @@index([sellerId])
+  @@index([category])
+  @@index([status])
+  @@map("listings")
+}
+
+enum ListingCategory {
+  TEXTBOOK
+  EXAM_PAPER
+  OTHER
+}
+
+enum ListingCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ListingStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model TutorProfile {
+  id           String   @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+
+  subjects     String[]
+  hourlyRate   Float
+  availability String?
+  bio          String?
+  isVerified   Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([universityId])
+  @@map("tutor_profiles")
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  studentId    String
+  student      User     @relation("studentBookings", fields: [studentId], references: [id])
+  tutorId      String
+  tutor        User     @relation("tutorBookings", fields: [tutorId], references: [id])
+
+  subject      String
+  status       BookingStatus @default(PENDING)
+  scheduledAt  DateTime
+  notes        String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([universityId])
+  @@index([studentId])
+  @@index([tutorId])
+  @@index([status])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  participantIds String[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages     Message[]
+
+  @@index([universityId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId       String
+  sender         User     @relation("sentMessages", fields: [senderId], references: [id])
+
+  content        String
+  sentAt         DateTime @default(now())
+  readAt         DateTime?
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  relatedType   TransactionType
+  relatedId     String
+
+  amount        Float
+  currency      String   @default("ETB")
+  chapaRef      String?
+  status        TransactionStatus @default(PENDING)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  LISTING_PURCHASE
+  TUTORING_BOOKING
+}
+
   users User[]
 
   @@map("universities")
 }
 
+model Report {
+  id           String   @id @default(cuid())
+  universityId String
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  reporterId   String
+  reporter     User     @relation(fields: [reporterId], references: [id])
+
+  targetType   ReportTarget
+  targetId     String
+
+  reason       String
+  status       ReportStatus @default(PENDING)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([universityId])
+  @@index([status])
+  @@map("reports")
+}
 model User {
   id           String   @id @default(uuid())
   universityId String   @map("university_id")
@@ -37,5 +281,21 @@ model User {
   @@map("users")
 }
 
+model Review {
+  id              String   @id @default(cuid())
+  reviewerId      String
+  reviewer        User     @relation("reviewsGiven", fields: [reviewerId], references: [id])
+  targetUserId    String
+  targetUser      User     @relation("reviewsReceived", fields: [targetUserId], references: [id])
+
+  rating          Int
+  comment         String?
+
+  createdAt       DateTime @default(now())
+
+  @@unique([reviewerId, targetUserId])
+  @@index([targetUserId])
+  @@map("reviews")
+}
 // TODO (module owners): Listing, TutorProfile, Booking, Conversation,
 // Message, Transaction, Report, Review models — see docs/plan.md Section 4.
