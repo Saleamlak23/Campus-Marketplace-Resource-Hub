@@ -10,6 +10,7 @@ import chatRoutes from './modules/chat/chat.routes';
 import tutoringRoutes from './modules/tutoring/tutoring.routes';
 import usersRoutes from './modules/users/users.routes';
 import universitiesRoutes from './modules/universities/universities.routes';
+import adminRoutes from './modules/admin/admin.routes';
 import prisma from './lib/prisma';
 
 const app = express();
@@ -84,6 +85,7 @@ app.use('/api', chatRoutes);
 app.use('/api', tutoringRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/universities', universitiesRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ============================================
 // PROTECTED ROUTES (Examples)
