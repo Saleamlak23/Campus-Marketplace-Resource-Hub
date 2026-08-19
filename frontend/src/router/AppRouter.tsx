@@ -4,6 +4,11 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
+import ListingsPage from '../pages/ListingsPage';
+import ListingDetailPage from '../pages/ListingDetailPage';
+import CreateListingPage from '../pages/CreateListingPage';
+import EditListingPage from '../pages/EditListingPage';
+import MyListingsPage from '../pages/MyListingsPage';
 import { AuthLoadingGate, GuestRoute, ProtectedRoute } from './ProtectedRoute';
 
 function AdminPlaceholderPage() {
@@ -48,6 +53,13 @@ export default function AppRouter() {
           <Route element={<ProtectedRoute allowedRoles={['student']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard/listings" element={<MyListingsPage />} />
+            </Route>
+            <Route element={<PublicLayout />}>
+              <Route path="/listings" element={<ListingsPage />} />
+              <Route path="/listings/new" element={<CreateListingPage />} />
+              <Route path="/listings/:id/edit" element={<EditListingPage />} />
+              <Route path="/listings/:id" element={<ListingDetailPage />} />
             </Route>
           </Route>
 
