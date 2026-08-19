@@ -1,43 +1,27 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 package-lock.json
-yarn.lock
 
-# Environment variables
+# Environment
 .env
 .env.local
-.env.*.local
 
-# Build output
+# Build
 dist/
 build/
-*.tsbuildinfo
 
 # Logs
 logs/
 *.log
-npm-debug.log*
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
-
-# Prisma
-*.db
-*.db-journal
-prisma/*.db
-prisma/*.db-journal
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Temporary files
-*.tmp
-*.temp
-
-# Frontend specific
-frontend/dist/
-frontend/.vite/
+# Prisma
+*.db
+*.db-journal

@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 import { AppError } from './errorHandler';
 
-// Extend Express Request type to include user
 declare global {
   namespace Express {
     interface Request {
@@ -18,26 +17,25 @@ declare global {
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 1. Get token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       throw new AppError('No token provided', 401);
     }
 
-    // 2. Extract token (Bearer <token>)
     const token = authHeader.split(' ')[1];
     if (!token) {
       throw new AppError('Invalid token format. Use: Bearer <token>', 401);
     }
 
-    // 3. Verify token
-    const decoded = jwt.verify(token, config.jwt.accessSecret) as {
-      userId: string;
-      universityId: string;
-      role: string;
-    };
+    // Fix: Ensure secret exists
+    const secret = config.jwt.accessSecret;
+    if (!secret) {
+      throw new AppError('JWT secret not configured', 500);
+    }
 
-    // 4. Attach user to request
+    // Fix: Use 'as any' to handle the type issue
+    const decoded = jwt.verify(token, secret) as any;
+
     req.user = {
       userId: decoded.userId,
       universityId: decoded.universityId,

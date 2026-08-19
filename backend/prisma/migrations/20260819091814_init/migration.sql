@@ -48,10 +48,22 @@ CREATE TABLE "users" (
     "role" "UserRole" NOT NULL DEFAULT 'STUDENT',
     "isBanned" BOOLEAN NOT NULL DEFAULT false,
     "banReason" TEXT,
+    "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "verification_tokens" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "verification_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -181,6 +193,12 @@ CREATE INDEX "users_universityId_idx" ON "users"("universityId");
 CREATE INDEX "users_email_idx" ON "users"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens"("token");
+
+-- CreateIndex
+CREATE INDEX "verification_tokens_token_idx" ON "verification_tokens"("token");
+
+-- CreateIndex
 CREATE INDEX "listings_universityId_idx" ON "listings"("universityId");
 
 -- CreateIndex
@@ -226,9 +244,6 @@ CREATE INDEX "transactions_userId_idx" ON "transactions"("userId");
 CREATE INDEX "transactions_status_idx" ON "transactions"("status");
 
 -- CreateIndex
-CREATE INDEX "transactions_relatedId_idx" ON "transactions"("relatedId");
-
--- CreateIndex
 CREATE INDEX "reports_universityId_idx" ON "reports"("universityId");
 
 -- CreateIndex
@@ -242,6 +257,9 @@ CREATE UNIQUE INDEX "reviews_reviewerId_targetUserId_key" ON "reviews"("reviewer
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "universities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "verification_tokens" ADD CONSTRAINT "verification_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "listings" ADD CONSTRAINT "listings_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "universities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
