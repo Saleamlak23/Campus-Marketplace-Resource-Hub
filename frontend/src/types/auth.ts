@@ -35,7 +35,7 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
-  universityIdNumber?: string;
+  universityIdNumber: string;
   department?: string;
   year?: number;
 }

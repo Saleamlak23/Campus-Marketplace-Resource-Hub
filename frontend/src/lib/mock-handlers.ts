@@ -11,21 +11,9 @@ import type {
 
 const MOCK_UNIVERSITIES = [
   {
-    id: 'uni-insa',
-    name: 'Institute of Science and Technology (INSA)',
-    allowedEmailDomains: ['insa.edu.et', 'student.insa.edu.et'],
-    createdAt: '2025-01-01T00:00:00.000Z',
-  },
-  {
     id: 'uni-aau',
     name: 'Addis Ababa University',
-    allowedEmailDomains: ['aau.edu.et', 'student.aau.edu.et'],
-    createdAt: '2025-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'uni-demo',
-    name: 'Demo University',
-    allowedEmailDomains: ['university.edu', 'student.university.edu'],
+    allowedEmailDomains: ['aau.edu.et'],
     createdAt: '2025-01-01T00:00:00.000Z',
   },
 ];
@@ -37,10 +25,10 @@ interface MockUserRecord extends User {
 const mockUsers: MockUserRecord[] = [
   {
     id: 'user-student-1',
-    universityId: 'uni-insa',
+    universityId: 'uni-aau',
     name: 'Demo Student',
-    email: 'student@insa.edu.et',
-    universityIdNumber: 'INSA/2024/001',
+    email: 'student@aau.edu.et',
+    universityIdNumber: 'AAU/2024/001',
     department: 'Computer Science',
     year: 3,
     role: 'student',
@@ -51,10 +39,10 @@ const mockUsers: MockUserRecord[] = [
   },
   {
     id: 'user-admin-1',
-    universityId: 'uni-insa',
+    universityId: 'uni-aau',
     name: 'Demo Admin',
-    email: 'admin@insa.edu.et',
-    universityIdNumber: null,
+    email: 'admin@aau.edu.et',
+    universityIdNumber: 'AAU/ADMIN/001',
     department: 'Administration',
     year: null,
     role: 'university_admin',
@@ -104,6 +92,9 @@ function findUniversityByEmail(email: string) {
   );
 }
 
+const AAU_SIGNUP_RESTRICTION_MESSAGE =
+  'Signups are currently restricted to Addis Ababa University students (@aau.edu.et).';
+
 export async function handleMockRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -132,12 +123,12 @@ export async function handleMockRequest<T>(
 
   if (matchRoute(method, path, '/api/auth/register', 'POST')) {
     const body = parseJsonBody<RegisterRequest>(options.body);
-    if (!body?.name || !body.email || !body.password) {
-      throw mockError(400, 'Name, email, and password are required.');
+    if (!body?.name || !body.email || !body.password || !body.universityIdNumber?.trim()) {
+      throw mockError(400, 'Name, email, password, and University ID are required.');
     }
     const university = findUniversityByEmail(body.email);
     if (!university) {
-      throw mockError(400, 'Email domain is not associated with a registered university.');
+      throw mockError(400, AAU_SIGNUP_RESTRICTION_MESSAGE);
     }
     const existing = mockUsers.find((u) => u.email.toLowerCase() === body.email.toLowerCase());
     if (existing) {
@@ -148,7 +139,7 @@ export async function handleMockRequest<T>(
       universityId: university.id,
       name: body.name,
       email: body.email.toLowerCase(),
-      universityIdNumber: body.universityIdNumber ?? null,
+      universityIdNumber: body.universityIdNumber.trim(),
       department: body.department ?? null,
       year: body.year ?? null,
       role: 'student',

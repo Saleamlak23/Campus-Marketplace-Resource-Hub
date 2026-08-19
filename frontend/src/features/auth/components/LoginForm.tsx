@@ -78,7 +78,7 @@ export default function LoginForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="you@university.edu"
+            placeholder="you@aau.edu.et"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           error={errors.email}

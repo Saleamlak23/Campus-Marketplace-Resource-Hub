@@ -8,10 +8,11 @@ import Input from '../../../components/common/Input';
 import Select from '../../../components/common/Select';
 import { useAuth } from '../hooks/useAuth';
 import {
+  getPasswordStrength,
   useUniversityFromEmail,
   validateEmail,
   validateName,
-  validatePassword,
+  validateRegistrationPassword,
 } from '../hooks/useUniversityFromEmail';
 
 interface FormErrors {
@@ -19,6 +20,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  universityIdNumber?: string;
   department?: string;
   year?: string;
   customDepartment?: string;
@@ -68,15 +70,20 @@ export default function RegisterForm() {
 
   const { detectedUniversity, domain, isDomainSupported } =
     useUniversityFromEmail(email);
+  const passwordStrength = getPasswordStrength(password, name);
 
-  function validateConfirmPassword(value: string): string | undefined {
+  function validateConfirmPassword(value: string, passwordToMatch = password): string | undefined {
     if (!value) {
       return 'Please confirm your password.';
     }
-    if (value !== password) {
+    if (value !== passwordToMatch) {
       return 'Passwords do not match.';
     }
     return undefined;
+  }
+
+  function updateFieldError(field: keyof FormErrors, error: string | undefined) {
+    setErrors((current) => ({ ...current, [field]: error, form: undefined }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -85,14 +92,17 @@ export default function RegisterForm() {
     const nextErrors: FormErrors = {
       name: validateName(name),
       email: validateEmail(email),
-      password: validatePassword(password),
+      password: validateRegistrationPassword(password, name),
       confirmPassword: validateConfirmPassword(confirmPassword),
+      universityIdNumber: universityIdNumber.trim()
+        ? undefined
+        : 'University ID is required.',
       department: department ? undefined : 'Please select your department.',
       year: year ? undefined : 'Please select your year.',
     };
 
     if (department === 'Other' && !customDepartment.trim()) {
-      nextErrors.department = 'Please enter your department.';
+      nextErrors.customDepartment = 'Please enter your department.';
     }
 
     const hasErrors = Object.values(nextErrors).some(Boolean);
@@ -109,7 +119,7 @@ export default function RegisterForm() {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
-        universityIdNumber: universityIdNumber.trim() || undefined,
+        universityIdNumber: universityIdNumber.trim(),
         department: department === 'Other' ? customDepartment.trim() : department || undefined,
         year: year ? Number(year) : undefined,
       });
@@ -132,7 +142,7 @@ export default function RegisterForm() {
         </Badge>
         <h1 className="text-2xl font-bold text-text">Create your account</h1>
         <p className="mt-2 text-sm text-text-muted">
-          Sign up with your official university email. Your domain determines your campus community.
+          Sign up with your official AAU email to join the Addis Ababa University community.
         </p>
       </div>
 
@@ -152,7 +162,16 @@ export default function RegisterForm() {
           autoComplete="name"
           placeholder="Your full name"
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            const nextName = event.target.value;
+            setName(nextName);
+            setErrors((current) => ({
+              ...current,
+              name: validateName(nextName),
+              password: validateRegistrationPassword(password, nextName),
+              form: undefined,
+            }));
+          }}
           error={errors.name}
           required
         />
@@ -163,9 +182,13 @@ export default function RegisterForm() {
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@university.edu"
+            placeholder="you@aau.edu.et"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              const nextEmail = event.target.value;
+              setEmail(nextEmail);
+              updateFieldError('email', validateEmail(nextEmail));
+            }}
             error={errors.email}
             required
           />
@@ -177,22 +200,31 @@ export default function RegisterForm() {
               </span>
             </div>
           )}
-          {domain && isDomainSupported === false && (
+          {domain && isDomainSupported === false && !errors.email && (
             <div
               className="mt-2 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600"
               role="alert"
             >
-              The domain <strong>@{domain}</strong> is not linked to a registered university.
+              Signups are currently restricted to Addis Ababa University students (@aau.edu.et).
             </div>
           )}
         </div>
 
         <Input
-          label="University ID (optional)"
+          label="University ID"
           name="universityIdNumber"
-          placeholder="Enter your ID"
+          placeholder="Enter your AAU ID"
           value={universityIdNumber}
-          onChange={(event) => setUniversityIdNumber(event.target.value)}
+          onChange={(event) => {
+            const nextId = event.target.value;
+            setUniversityIdNumber(nextId);
+            updateFieldError(
+              'universityIdNumber',
+              nextId.trim() ? undefined : 'University ID is required.',
+            );
+          }}
+          error={errors.universityIdNumber}
+          required
         />
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -200,7 +232,19 @@ export default function RegisterForm() {
             label="Department"
             name="department"
             value={department}
-            onChange={(event) => setDepartment(event.target.value)}
+            onChange={(event) => {
+              const nextDepartment = event.target.value;
+              setDepartment(nextDepartment);
+              setErrors((current) => ({
+                ...current,
+                department: nextDepartment ? undefined : 'Please select your department.',
+                customDepartment:
+                  nextDepartment === 'Other' && !customDepartment.trim()
+                    ? 'Please enter your department.'
+                    : undefined,
+                form: undefined,
+              }));
+            }}
             options={departmentOptions}
             placeholder="Select department"
             required
@@ -212,8 +256,15 @@ export default function RegisterForm() {
               name="customDepartment"
               placeholder="Your department"
               value={customDepartment}
-              onChange={(e) => setCustomDepartment(e.target.value)}
-              error={errors.department}
+              onChange={(event) => {
+                const nextDepartment = event.target.value;
+                setCustomDepartment(nextDepartment);
+                updateFieldError(
+                  'customDepartment',
+                  nextDepartment.trim() ? undefined : 'Please enter your department.',
+                );
+              }}
+              error={errors.customDepartment}
               required
             />
           )}
@@ -221,7 +272,11 @@ export default function RegisterForm() {
             label="Year"
             name="year"
             value={year}
-            onChange={(event) => setYear(event.target.value)}
+            onChange={(event) => {
+              const nextYear = event.target.value;
+              setYear(nextYear);
+              updateFieldError('year', nextYear ? undefined : 'Please select your year.');
+            }}
             options={yearOptions}
             placeholder="Select year"
             required
@@ -236,10 +291,50 @@ export default function RegisterForm() {
           autoComplete="new-password"
           placeholder="At least 8 characters"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            const nextPassword = event.target.value;
+            setPassword(nextPassword);
+            setErrors((current) => ({
+              ...current,
+              password: validateRegistrationPassword(nextPassword, name),
+              confirmPassword: validateConfirmPassword(confirmPassword, nextPassword),
+              form: undefined,
+            }));
+          }}
           error={errors.password}
           required
         />
+        {password && (
+          <div className="space-y-1.5" aria-live="polite">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-text-muted">Password strength</span>
+              <span
+                className={
+                  passwordStrength === 'strong'
+                    ? 'font-medium text-accent-600'
+                    : passwordStrength === 'medium'
+                      ? 'font-medium text-accent-700'
+                      : 'font-medium text-danger-600'
+                }
+              >
+                {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                className={
+                  `h-full transition-all ${
+                    passwordStrength === 'strong'
+                      ? 'w-full bg-accent-500'
+                      : passwordStrength === 'medium'
+                        ? 'w-2/3 bg-accent-500'
+                        : 'w-1/3 bg-danger-500'
+                  }`
+                }
+              />
+            </div>
+          </div>
+        )}
 
         <Input
           label="Confirm password"
@@ -248,12 +343,24 @@ export default function RegisterForm() {
           autoComplete="new-password"
           placeholder="Re-enter your password"
           value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
+          onChange={(event) => {
+            const nextConfirmation = event.target.value;
+            setConfirmPassword(nextConfirmation);
+            updateFieldError(
+              'confirmPassword',
+              validateConfirmPassword(nextConfirmation),
+            );
+          }}
           error={errors.confirmPassword}
           required
         />
 
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          isLoading={isSubmitting}
+          disabled={isSubmitting || passwordStrength === 'weak'}
+        >
           Create account
         </Button>
       </form>

@@ -49,7 +49,7 @@ A web platform for university students to buy and sell textbooks, find tutors, a
 ## 3. Core Modules & Features
 
 ### 3.1 Auth & User Profiles
-- Signup/login with university email verification — the email domain (e.g. `@university.edu`) determines which university a user belongs to
+- AAU-only signup with university email verification — accounts must use an `@aau.edu.et` email address
 - Stored role: `student` (default on signup) or `admin` (manually assigned, never via public signup)
 - Profile: name, department, year, avatar, bio, ratings, university (auto-assigned from email domain)
 - JWT access + refresh tokens

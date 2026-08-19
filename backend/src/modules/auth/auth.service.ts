@@ -16,7 +16,7 @@ export class AuthService {
     email: string;
     password: string;
     department?: string;
-    universityIdNumber?: string;
+    universityIdNumber: string;
   }) {
     console.log('[AuthService] Register started for:', data.email);
 
@@ -27,6 +27,13 @@ export class AuthService {
 
     if (existingUser) {
       throw new AppError('User already exists', 400);
+    }
+
+    if (!data.email.toLowerCase().endsWith('@aau.edu.et')) {
+      throw new AppError(
+        'Signups are currently restricted to Addis Ababa University students (@aau.edu.et).',
+        400,
+      );
     }
 
     // 2. Extract university domain
