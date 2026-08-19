@@ -5,8 +5,8 @@ import {
   getListingByIdHandler,
   updateListingHandler,
   deleteListingHandler,
-} from './listings.controller.js';
-import { authenticate } from '../../middleware/authenticate.js';
+} from './listings.controller';
+import { authenticate } from '../../middleware/authenticate';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import prisma from '../../lib/prisma.js';
+import prisma from '../../lib/prisma';
 import { ListingCategory, ListingCondition, ListingStatus } from '@prisma/client';
 
 export interface CreateListingInput {
@@ -18,8 +18,12 @@ export interface GetListingsFilter {
   search?: string;
   category?: ListingCategory;
   department?: string;
+  status?: ListingStatus;
+  sellerId?: string;
   minPrice?: number;
   maxPrice?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface UpdateListingInput {
@@ -62,18 +66,39 @@ export async function createListing(data: CreateListingInput) {
 
 // 2. Get listings with search & filters (STRICTLY scoped to user's university)
 export async function getListings(filters: GetListingsFilter) {
-  const { universityId, search, category, department, minPrice, maxPrice } = filters;
+  const {
+    universityId,
+    search,
+    category,
+    department,
+    status,
+    sellerId,
+    minPrice,
+    maxPrice,
+    page = 1,
+    pageSize = 20,
+  } = filters;
+
+  const skip = (page - 1) * pageSize;
 
   const whereClause: any = {
     universityId, // Always filter by the student's own university
   };
 
   if (category) {
-    whereClause.category = { equals: category, mode: 'insensitive' };
+    whereClause.category = category;
   }
 
   if (department) {
     whereClause.department = { equals: department, mode: 'insensitive' };
+  }
+
+  if (status) {
+    whereClause.status = status;
+  }
+
+  if (sellerId) {
+    whereClause.sellerId = sellerId;
   }
 
   if (search) {
@@ -89,19 +114,33 @@ export async function getListings(filters: GetListingsFilter) {
     if (maxPrice !== undefined) whereClause.price.lte = maxPrice;
   }
 
-  return await prisma.listing.findMany({
-    where: whereClause,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      seller: {
-        select: {
-          id: true,
-          name: true,
-          avatarUrl: true,
+  const [listings, total] = await Promise.all([
+    prisma.listing.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.listing.count({ where: whereClause }),
+  ]);
+
+  return {
+    listings,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 // 3. Get single listing by ID
@@ -132,6 +171,16 @@ export async function updateListing(id: string, data: UpdateListingInput) {
   return await prisma.listing.update({
     where: { id },
     data,
+    include: {
+      seller: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
 }
 

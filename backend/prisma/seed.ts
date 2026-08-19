@@ -15,21 +15,31 @@ async function main() {
   const aau = await getOrCreateUniversity('Addis Ababa University', ['@aau.edu.et']);
   const astu = await getOrCreateUniversity('Adama Science and Technology University', ['@astu.edu.et']);
 
-  const [hana, abel, selam] = await Promise.all([
+  const [hana, abel, selam, adminAau, superAdmin] = await Promise.all([
     prisma.user.upsert({
       where: { email: 'hana.demo@aau.edu.et' },
-      update: { name: 'Hana Tesfaye', passwordHash, universityId: aau.id, isVerified: true },
-      create: { name: 'Hana Tesfaye', email: 'hana.demo@aau.edu.et', passwordHash, universityId: aau.id, department: 'Computer Science', isVerified: true },
+      update: { name: 'Hana Tesfaye', passwordHash, universityId: aau.id, isVerified: true, role: 'STUDENT' },
+      create: { name: 'Hana Tesfaye', email: 'hana.demo@aau.edu.et', passwordHash, universityId: aau.id, department: 'Computer Science', isVerified: true, role: 'STUDENT' },
     }),
     prisma.user.upsert({
       where: { email: 'abel.demo@aau.edu.et' },
-      update: { name: 'Abel Mekonnen', passwordHash, universityId: aau.id, isVerified: true },
-      create: { name: 'Abel Mekonnen', email: 'abel.demo@aau.edu.et', passwordHash, universityId: aau.id, department: 'Software Engineering', isVerified: true },
+      update: { name: 'Abel Mekonnen', passwordHash, universityId: aau.id, isVerified: true, role: 'STUDENT' },
+      create: { name: 'Abel Mekonnen', email: 'abel.demo@aau.edu.et', passwordHash, universityId: aau.id, department: 'Software Engineering', isVerified: true, role: 'STUDENT' },
     }),
     prisma.user.upsert({
       where: { email: 'selam.demo@astu.edu.et' },
-      update: { name: 'Selam Abate', passwordHash, universityId: astu.id, isVerified: true },
-      create: { name: 'Selam Abate', email: 'selam.demo@astu.edu.et', passwordHash, universityId: astu.id, department: 'Information Technology', isVerified: true },
+      update: { name: 'Selam Abate', passwordHash, universityId: astu.id, isVerified: true, role: 'STUDENT' },
+      create: { name: 'Selam Abate', email: 'selam.demo@astu.edu.et', passwordHash, universityId: astu.id, department: 'Information Technology', isVerified: true, role: 'STUDENT' },
+    }),
+    prisma.user.upsert({
+      where: { email: 'admin.aau@aau.edu.et' },
+      update: { name: 'AAU Admin', passwordHash, universityId: aau.id, isVerified: true, role: 'UNIVERSITY_ADMIN' },
+      create: { name: 'AAU Admin', email: 'admin.aau@aau.edu.et', passwordHash, universityId: aau.id, department: 'Administration', isVerified: true, role: 'UNIVERSITY_ADMIN' },
+    }),
+    prisma.user.upsert({
+      where: { email: 'superadmin.demo@aau.edu.et' },
+      update: { name: 'Super Admin', passwordHash, universityId: aau.id, isVerified: true, role: 'SUPER_ADMIN' },
+      create: { name: 'Super Admin', email: 'superadmin.demo@aau.edu.et', passwordHash, universityId: aau.id, department: 'Platform Operations', isVerified: true, role: 'SUPER_ADMIN' },
     }),
   ]);
 
@@ -69,8 +79,41 @@ async function main() {
     create: { id: `seed-${booking.id}`, userId: hana.id, relatedType: 'TUTORING_BOOKING', relatedId: booking.id, amount: 250, status: 'PENDING' },
   });
 
+  await prisma.review.upsert({
+    where: {
+      reviewerId_targetUserId: {
+        reviewerId: hana.id,
+        targetUserId: abel.id,
+      },
+    },
+    update: { rating: 5, comment: 'Great peer tutor, very clear explanations on trees and graphs.' },
+    create: {
+      reviewerId: hana.id,
+      targetUserId: abel.id,
+      rating: 5,
+      comment: 'Great peer tutor, very clear explanations on trees and graphs.',
+    },
+  });
+
+  const existingReport = await prisma.report.findFirst({
+    where: { reporterId: hana.id, targetId: listing.id },
+  });
+  if (!existingReport) {
+    await prisma.report.create({
+      data: {
+        universityId: aau.id,
+        reporterId: hana.id,
+        targetType: 'LISTING',
+        targetId: listing.id,
+        reason: 'Sample seed report: Testing moderation workflow.',
+        status: 'PENDING',
+      },
+    });
+  }
+
   console.log(`Seeded ${aau.name} and ${astu.name}. Demo password: ${DEMO_PASSWORD}`);
   console.log(`Created listing: ${listing.title}; tutor booking: ${booking.id}; ASTU demo user: ${selam.email}`);
+  console.log(`Created admin: ${adminAau.email}; super admin: ${superAdmin.email}`);
 }
 
 main()

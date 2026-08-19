@@ -46,7 +46,65 @@ export async function chapaWebhookHandler(req: Request, res: Response, next: Nex
       await prisma.transaction.update({ where: { id: transaction.id }, data: { status: 'FAILED' } });
       throw new AppError('Chapa transaction verification failed', 400);
     }
-    await prisma.transaction.update({ where: { id: transaction.id }, data: { status: 'COMPLETED' } });
     res.json({ success: true });
+  } catch (error) { next(error); }
+}
+
+export async function getMyTransactionsHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw new AppError('Not authenticated', 401);
+    const { status, page, pageSize } = req.query as { status?: string; page?: string; pageSize?: string };
+    
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(pageSize || '20', 10) || 20));
+    const skip = (pageNum - 1) * limit;
+
+    const whereClause: any = { userId: req.user.userId };
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.transaction.count({ where: whereClause }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        total,
+        page: pageNum,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) { next(error); }
+}
+
+export async function getTransactionByIdHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw new AppError('Not authenticated', 401);
+    const { id } = req.params;
+    if (typeof id !== 'string') throw new AppError('Invalid transaction ID', 400);
+
+    const transaction = await prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    if (!transaction) throw new AppError('Transaction not found', 404);
+    if (transaction.userId !== req.user.userId && req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Cannot access transactions of other users', 403);
+    }
+
+    res.json({ success: true, data: transaction });
   } catch (error) { next(error); }
 }

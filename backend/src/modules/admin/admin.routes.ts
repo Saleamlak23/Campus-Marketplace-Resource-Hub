@@ -1,10 +1,29 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
-import { isAdmin } from '../../middleware/authorize';
-import { deleteListingHandler } from './admin.controller';
+import { isAdmin, isSuperAdmin } from '../../middleware/authorize';
+import {
+  banUserHandler,
+  deleteListingHandler,
+  getReportsHandler,
+  getUniversitiesHandler,
+  getUsersHandler,
+  unbanUserHandler,
+  updateReportStatusHandler,
+} from './admin.controller';
 
 const router = Router();
 
-router.delete('/listings/:id', authenticate, isAdmin, deleteListingHandler);
+// All admin routes require authentication and at least UNIVERSITY_ADMIN role
+router.use(authenticate, isAdmin);
+
+router.get('/users', getUsersHandler);
+router.patch('/users/:userId/ban', banUserHandler);
+router.patch('/users/:userId/unban', unbanUserHandler);
+router.delete('/listings/:id', deleteListingHandler);
+router.get('/reports', getReportsHandler);
+router.patch('/reports/:id', updateReportStatusHandler);
+
+// Super admin specific route
+router.get('/universities', isSuperAdmin, getUniversitiesHandler);
 
 export default router;
