@@ -8,6 +8,7 @@ import { scopeByUniversity } from './middleware/universityScoping';
 import authRoutes from './modules/auth/auth.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import tutoringRoutes from './modules/tutoring/tutoring.routes';
+import listingsRouter from './modules/listings/listings.routes'; // Adjust path if it lives in modules/listings/
 import prisma from './lib/prisma';
 
 const app = express();
@@ -80,6 +81,9 @@ app.post('/api/debug', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', tutoringRoutes);
+
+// Mount Listings Routes
+app.use('/api/listings', listingsRouter);
 
 // ============================================
 // PROTECTED ROUTES (Examples)
@@ -187,7 +191,6 @@ app.get('/api/admin/universities', authenticate, isSuperAdmin, async (req, res) 
 // 4. Ban user (admin only)
 app.patch('/api/admin/users/:userId/ban', authenticate, isAdmin, async (req, res) => {
   try {
-    // ✅ FIX: Extract userId from params and ensure it's a string
     const userId = req.params.userId;
     if (Array.isArray(userId)) {
       return res.status(400).json({ success: false, error: 'Invalid user ID' });
@@ -195,7 +198,6 @@ app.patch('/api/admin/users/:userId/ban', authenticate, isAdmin, async (req, res
 
     const { banReason } = req.body;
 
-    // Check if user exists and belongs to same university
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -204,7 +206,6 @@ app.patch('/api/admin/users/:userId/ban', authenticate, isAdmin, async (req, res
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    // Super admin can ban anyone, university admin can only ban their own university
     if (req.user?.role !== 'SUPER_ADMIN' && user.universityId !== req.user?.universityId) {
       return res.status(403).json({ 
         success: false, 
@@ -212,7 +213,6 @@ app.patch('/api/admin/users/:userId/ban', authenticate, isAdmin, async (req, res
       });
     }
 
-    // Don't allow banning other admins (unless super admin)
     if (user.role === 'UNIVERSITY_ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ 
         success: false, 
@@ -241,7 +241,6 @@ app.patch('/api/admin/users/:userId/ban', authenticate, isAdmin, async (req, res
 // 5. Unban user (admin only)
 app.patch('/api/admin/users/:userId/unban', authenticate, isAdmin, async (req, res) => {
   try {
-    // ✅ FIX: Extract userId from params and ensure it's a string
     const userId = req.params.userId;
     if (Array.isArray(userId)) {
       return res.status(400).json({ success: false, error: 'Invalid user ID' });
