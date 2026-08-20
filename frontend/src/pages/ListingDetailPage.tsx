@@ -6,6 +6,7 @@ import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
 import Spinner from '../components/common/Spinner';
 import ListingStatusBadge from '../components/listings/ListingStatusBadge';
+import { createConversation } from '../features/chat/api';
 import { useListingQuery } from '../features/listings/hooks/useListing';
 import {
   useDeleteListingMutation,
@@ -28,6 +29,7 @@ export default function ListingDetailPage() {
   const updateMutation = useUpdateListingMutation(id ?? '');
   const deleteMutation = useDeleteListingMutation();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   if (isLoading) {
     return (
@@ -63,6 +65,16 @@ export default function ListingDetailPage() {
     if (!id) return;
     await deleteMutation.mutateAsync(id);
     navigate('/dashboard/listings');
+  }
+
+  async function handleMessageSeller() {
+    setIsStartingChat(true);
+    try {
+      const conversation = await createConversation(listing.sellerId);
+      navigate(`/chat/${conversation.id}`);
+    } finally {
+      setIsStartingChat(false);
+    }
   }
 
   return (
@@ -196,6 +208,8 @@ export default function ListingDetailPage() {
               variant="secondary"
               className="w-full"
               disabled={listing.status !== 'AVAILABLE'}
+              isLoading={isStartingChat}
+              onClick={handleMessageSeller}
             >
               {listing.status === 'AVAILABLE'
                 ? 'Message seller'
