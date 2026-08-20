@@ -28,7 +28,7 @@ export async function createListingHandler(
       universityId,
     });
 
-    return res.status(201).json({ success: true, data: listing });
+    return res.status(201).json({ success: true, data: { listing } });
   } catch (error) {
     next(error);
   }
@@ -108,7 +108,7 @@ export async function getListingByIdHandler(
       return res.status(404).json({ success: false, error: 'Listing not found' });
     }
 
-    return res.status(200).json({ success: true, data: listing });
+    return res.status(200).json({ success: true, data: { listing } });
   } catch (error) {
     next(error);
   }
@@ -137,7 +137,7 @@ export async function updateListingHandler(
     }
 
     const updatedListing = await listingService.updateListing(id, req.body);
-    return res.status(200).json({ success: true, data: updatedListing });
+    return res.status(200).json({ success: true, data: { listing: updatedListing } });
   } catch (error) {
     next(error);
   }
