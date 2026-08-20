@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -9,17 +7,6 @@ export default function Footer() {
         <p className="text-sm text-text-muted">
           © {year} Campus Marketplace & Resource Hub. Built for university communities.
         </p>
-        <div className="flex gap-6 text-sm">
-          <Link to="/" className="text-text-muted text-nowrap transition-colors hover:text-text">
-            Home
-          </Link>
-          <Link to="/login" className="text-text-muted text-nowrap transition-colors hover:text-text">
-            Log in
-          </Link>
-          <Link to="/register" className="text-text-muted text-nowrap transition-colors hover:text-text">
-            Sign up
-          </Link>
-        </div>
       </div>
     </footer>
   );

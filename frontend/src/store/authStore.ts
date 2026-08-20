@@ -9,6 +9,7 @@ interface AuthState {
   university: University | null;
   isAuthenticated: boolean;
   setAuth: (payload: AuthResponse) => void;
+  updateUser: (changes: Partial<User>) => void;
   clearAuth: () => void;
   hasRole: (...roles: UserRole[]) => boolean;
   isAdmin: () => boolean;
@@ -35,6 +36,12 @@ export const useAuthStore = create<AuthState>()(
           university: resolveUniversity(payload.user),
           isAuthenticated: true,
         });
+      },
+
+      updateUser: (changes) => {
+        const { user } = get();
+        if (!user) return;
+        set({ user: { ...user, ...changes } });
       },
 
       clearAuth: () => {

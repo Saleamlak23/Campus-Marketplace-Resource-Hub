@@ -3,6 +3,9 @@ import Badge from '../components/common/Badge';
 import Card from '../components/common/Card';
 import { useMyListingsQuery } from '../features/listings/hooks/useListings';
 import { useAuthStore } from '../store/authStore';
+import { useQuery } from '@tanstack/react-query';
+import { fetchConversations } from '../features/chat/api';
+import { fetchBookings } from '../features/tutoring/api';
 
 export default function DashboardPage() {
   const { user, university } = useAuthStore();
@@ -13,6 +16,10 @@ export default function DashboardPage() {
   const activeListingsCount = myListings?.listings.filter(
     (l) => l.status === 'available',
   ).length;
+  const { data: conversations = [] } = useQuery({ queryKey: ['conversations'], queryFn: fetchConversations });
+  const { data: bookings = [] } = useQuery({ queryKey: ['bookings'], queryFn: fetchBookings });
+  const activeChatsCount = conversations.length;
+  const upcomingBookingsCount = bookings.filter((booking) => booking.status !== 'declined' && new Date(booking.scheduledAt) >= new Date()).length;
 
   return (
     <div className="space-y-6">
@@ -41,20 +48,24 @@ export default function DashboardPage() {
             </p>
           </Card>
         </Link>
-        <Card>
-          <p className="text-sm text-text-muted">Unread messages</p>
-          <p className="mt-2 text-3xl font-bold text-text">—</p>
+        <Link to="/chat">
+        <Card hoverable>
+          <p className="text-sm text-text-muted">Active chats</p>
+          <p className="mt-2 text-3xl font-bold text-text">{activeChatsCount}</p>
           <p className="mt-1 text-xs text-text-muted">
-            Available after Chat UI (Task C)
+            Open your active conversations
           </p>
         </Card>
-        <Card>
+        </Link>
+        <Link to="/tutoring">
+        <Card hoverable>
           <p className="text-sm text-text-muted">Tutoring bookings</p>
-          <p className="mt-2 text-3xl font-bold text-text">—</p>
+          <p className="mt-2 text-3xl font-bold text-text">{upcomingBookingsCount}</p>
           <p className="mt-1 text-xs text-text-muted">
-            Available after Tutoring UI (Task C)
+            View upcoming tutoring sessions
           </p>
         </Card>
+        </Link>
       </div>
 
       <Card>

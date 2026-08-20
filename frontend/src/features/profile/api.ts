@@ -1,5 +1,6 @@
 import { apiClient, isMockModeEnabled } from '../../lib/api-client';
 import { getAccessToken } from '../../store/authStore';
+import type { User } from '../../types';
 
 export interface Profile {
   id: string;
@@ -14,21 +15,21 @@ export interface Profile {
 
 export type UpdateProfileRequest = Pick<Profile, 'name' | 'department' | 'year' | 'bio' | 'avatarUrl'>;
 
-let mockProfile: Profile = {
-  id: 'user-student-1', name: 'Demo Student', email: 'student@aau.edu.et',
-  universityName: 'Addis Ababa University', department: 'Computer Science', year: 3,
-  bio: 'Computer science student interested in building useful campus tools.', avatarUrl: null,
-};
+export function profileFromUser(user: User, universityName: string): Profile {
+  return { id: user.id, name: user.name, email: user.email, universityName,
+    department: user.department ?? '', year: user.year ?? 1, bio: user.bio ?? '', avatarUrl: user.avatarUrl };
+}
 
-export async function fetchProfile(): Promise<Profile> {
-  if (isMockModeEnabled()) return { ...mockProfile };
+export async function fetchProfile(user: User, universityName: string): Promise<Profile> {
+  if (isMockModeEnabled()) return profileFromUser(user, universityName);
   return apiClient<Profile>('/api/users/me', { token: getAccessToken() });
 }
 
 export async function updateProfile(payload: UpdateProfileRequest): Promise<Profile> {
   if (isMockModeEnabled()) {
-    mockProfile = { ...mockProfile, ...payload };
-    return { ...mockProfile };
+    const user = JSON.parse(localStorage.getItem('campus-marketplace-auth') ?? '{}')?.state?.user as User | undefined;
+    if (!user) throw new Error('No active user.');
+    return { ...profileFromUser(user, user.university?.name ?? 'Addis Ababa University'), ...payload };
   }
   return apiClient<Profile>('/api/users/me', { method: 'PATCH', body: payload, token: getAccessToken() });
 }

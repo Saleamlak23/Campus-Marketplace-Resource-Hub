@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import Button from '../common/Button';
 import { useAuthStore } from '../../store/authStore';
 
 export default function Navbar() {
   const { isAuthenticated, user, university, clearAuth } = useAuthStore();
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -28,9 +30,6 @@ export default function Navbar() {
             className="hidden items-center gap-1 md:flex"
             aria-label="Main navigation"
           >
-            <NavLink to="/" className={navLinkClass} end>
-              Home
-            </NavLink>
             {isAuthenticated && (
               <>
                 <NavLink to="/listings" className={navLinkClass}>
@@ -65,20 +64,37 @@ export default function Navbar() {
                 Log out
               </Button>
             </>
-          ) : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost" size="sm">
-                  Log in
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="sm">Sign up</Button>
-              </Link>
-            </>
-          )}
+          ) : null}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {isMobileMenuOpen ? '✕' : '☰'}
+          </Button>
         </div>
       </div>
+      {isMobileMenuOpen && (
+        <nav className="border-t border-border bg-surface px-4 py-3 shadow-md md:hidden" aria-label="Mobile navigation">
+          <div className="mx-auto grid max-w-7xl gap-1">
+            <MobileLink to="/" onNavigate={() => setMobileMenuOpen(false)}>Home</MobileLink>
+            {isAuthenticated && <>
+              <MobileLink to="/dashboard" onNavigate={() => setMobileMenuOpen(false)}>Dashboard</MobileLink>
+              <MobileLink to="/listings" onNavigate={() => setMobileMenuOpen(false)}>Browse</MobileLink>
+              <MobileLink to="/chat" onNavigate={() => setMobileMenuOpen(false)}>Messages</MobileLink>
+              <MobileLink to="/tutoring" onNavigate={() => setMobileMenuOpen(false)}>Tutoring</MobileLink>
+              <MobileLink to="/profile" onNavigate={() => setMobileMenuOpen(false)}>Profile</MobileLink>
+            </>}
+          </div>
+        </nav>
+      )}
     </header>
   );
+}
+
+function MobileLink({ to, children, onNavigate }: { to: string; children: React.ReactNode; onNavigate: () => void }) {
+  return <NavLink to={to} onClick={onNavigate} end={to === '/'} className={({ isActive }) => `rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-primary-50 text-primary-700' : 'text-text-muted hover:bg-surface-muted'}`}>{children}</NavLink>;
 }

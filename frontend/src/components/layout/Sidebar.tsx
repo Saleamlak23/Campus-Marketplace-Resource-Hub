@@ -32,6 +32,7 @@ export default function Sidebar() {
           <NavLink
             key={link.to}
             to={link.to}
+            end={link.to === '/dashboard'}
             className={({ isActive }) =>
               `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive

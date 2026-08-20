@@ -6,25 +6,35 @@ import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import { fetchProfile, updateProfile, type Profile, type UpdateProfileRequest } from './api';
+import { useAuthStore } from '../../store/authStore';
 
 const departments = ['Computer Science', 'Software Engineering', 'Information Technology', 'Information Systems', 'Electrical Engineering'];
 const years = Array.from({ length: 7 }, (_, index) => ({ value: String(index + 1), label: `Year ${index + 1}` }));
 
 export default function ProfileCard() {
   const queryClient = useQueryClient();
-  const { data: profile, isLoading, error } = useQuery({ queryKey: ['profile'], queryFn: fetchProfile });
+  const { user, university, updateUser } = useAuthStore();
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: () => fetchProfile(user!, university?.name ?? 'Addis Ababa University'),
+    enabled: Boolean(user),
+  });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<UpdateProfileRequest | null>(null);
   const [formError, setFormError] = useState<string>();
   const mutation = useMutation({
     mutationFn: updateProfile,
-    onSuccess: (updated) => { queryClient.setQueryData(['profile'], updated); setEditing(false); },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['profile', user?.id], updated);
+      updateUser({ name: updated.name, department: updated.department, year: updated.year, bio: updated.bio, avatarUrl: updated.avatarUrl });
+      setEditing(false);
+    },
     onError: () => setFormError('Unable to save your profile. Please try again.'),
   });
 
   useEffect(() => { if (profile) setDraft(toDraft(profile)); }, [profile]);
   if (isLoading) return <Card>Loading your profile…</Card>;
-  if (error || !profile || !draft) return <Card className="text-danger-600">Unable to load your profile.</Card>;
+  if (error || !user || !profile || !draft) return <Card className="text-danger-600">Unable to load your profile.</Card>;
 
   const updateDraft = <K extends keyof UpdateProfileRequest>(key: K, value: UpdateProfileRequest[K]) =>
     setDraft((current) => current ? { ...current, [key]: value } : current);
