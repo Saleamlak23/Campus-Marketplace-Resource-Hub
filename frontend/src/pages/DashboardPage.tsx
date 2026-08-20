@@ -14,12 +14,12 @@ export default function DashboardPage() {
   );
 
   const activeListingsCount = myListings?.listings.filter(
-    (l) => l.status === 'available',
+    (l) => l.status === 'AVAILABLE',
   ).length;
   const { data: conversations = [] } = useQuery({ queryKey: ['conversations'], queryFn: fetchConversations });
   const { data: bookings = [] } = useQuery({ queryKey: ['bookings'], queryFn: fetchBookings });
   const activeChatsCount = conversations.length;
-  const upcomingBookingsCount = bookings.filter((booking) => booking.status !== 'declined' && new Date(booking.scheduledAt) >= new Date()).length;
+  const upcomingBookingsCount = bookings.filter((booking) => booking.status !== 'DECLINED' && new Date(booking.scheduledAt) >= new Date()).length;
 
   return (
     <div className="space-y-6">

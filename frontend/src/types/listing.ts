@@ -1,8 +1,9 @@
-export type ListingCategory = 'textbook' | 'past_exam' | 'equipment' | 'other';
+// Backend uses uppercase enums - keep them as-is from the API
+export type ListingCategory = 'TEXTBOOK' | 'PAST_EXAM' | 'EQUIPMENT' | 'OTHER';
 
-export type ListingCondition = 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+export type ListingCondition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'POOR';
 
-export type ListingStatus = 'available' | 'reserved' | 'sold';
+export type ListingStatus = 'AVAILABLE' | 'RESERVED' | 'SOLD';
 
 export interface ListingSeller {
   id: string;
@@ -45,6 +46,7 @@ export interface ListingsResponse {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 export interface ListingResponse {

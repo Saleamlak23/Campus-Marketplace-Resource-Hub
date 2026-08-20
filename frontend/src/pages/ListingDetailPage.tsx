@@ -195,9 +195,9 @@ export default function ListingDetailPage() {
             <Button
               variant="secondary"
               className="w-full"
-              disabled={listing.status !== 'available'}
+              disabled={listing.status !== 'AVAILABLE'}
             >
-              {listing.status === 'available'
+              {listing.status === 'AVAILABLE'
                 ? 'Message seller'
                 : 'Not available'}
             </Button>

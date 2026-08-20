@@ -5,10 +5,10 @@ import type {
 } from '../../types';
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
-  textbook: 'Textbook',
-  past_exam: 'Past Exam Paper',
-  equipment: 'Equipment',
-  other: 'Other',
+  TEXTBOOK: 'Textbook',
+  PAST_EXAM: 'Past Exam Paper',
+  EQUIPMENT: 'Equipment',
+  OTHER: 'Other',
 };
 
 export const CATEGORY_OPTIONS = (
@@ -16,11 +16,11 @@ export const CATEGORY_OPTIONS = (
 ).map(([value, label]) => ({ value, label }));
 
 export const CONDITION_LABELS: Record<ListingCondition, string> = {
-  new: 'New',
-  like_new: 'Like New',
-  good: 'Good',
-  fair: 'Fair',
-  poor: 'Poor',
+  NEW: 'New',
+  LIKE_NEW: 'Like New',
+  GOOD: 'Good',
+  FAIR: 'Fair',
+  POOR: 'Poor',
 };
 
 export const CONDITION_OPTIONS = (
@@ -28,18 +28,18 @@ export const CONDITION_OPTIONS = (
 ).map(([value, label]) => ({ value, label }));
 
 export const STATUS_LABELS: Record<ListingStatus, string> = {
-  available: 'Available',
-  reserved: 'Reserved',
-  sold: 'Sold',
+  AVAILABLE: 'Available',
+  RESERVED: 'Reserved',
+  SOLD: 'Sold',
 };
 
 export const STATUS_BADGE_VARIANT: Record<
   ListingStatus,
   'success' | 'warning' | 'default'
 > = {
-  available: 'success',
-  reserved: 'warning',
-  sold: 'default',
+  AVAILABLE: 'success',
+  RESERVED: 'warning',
+  SOLD: 'default',
 };
 
 export const STATUS_OPTIONS = (

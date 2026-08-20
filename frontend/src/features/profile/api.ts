@@ -1,35 +1,64 @@
-import { apiClient, isMockModeEnabled } from '../../lib/api-client';
+import { apiClient } from '../../lib/api-client';
 import { getAccessToken } from '../../store/authStore';
-import type { User } from '../../types';
 
 export interface Profile {
   id: string;
   name: string;
   email: string;
-  universityName: string;
   department: string;
   year: number;
   bio: string;
   avatarUrl: string | null;
+  universityName: string;
 }
 
-export type UpdateProfileRequest = Pick<Profile, 'name' | 'department' | 'year' | 'bio' | 'avatarUrl'>;
-
-export function profileFromUser(user: User, universityName: string): Profile {
-  return { id: user.id, name: user.name, email: user.email, universityName,
-    department: user.department ?? '', year: user.year ?? 1, bio: user.bio ?? '', avatarUrl: user.avatarUrl };
+export interface UpdateProfileRequest {
+  name: string;
+  department: string;
+  year?: number;
+  bio: string;
+  avatarUrl?: string | null;
 }
 
-export async function fetchProfile(user: User, universityName: string): Promise<Profile> {
-  if (isMockModeEnabled()) return profileFromUser(user, universityName);
-  return apiClient<Profile>('/api/users/me', { token: getAccessToken() });
+interface BackendUser {
+  id: string;
+  name: string;
+  email: string;
+  department: string | null;
+  avatarUrl: string | null;
+  bio?: string | null;
+  university?: { id: string; name: string };
+}
+
+function mapToProfile(user: BackendUser, fallbackUniversityName: string): Profile {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    department: user.department ?? '',
+    year: 1,
+    bio: user.bio ?? '',
+    avatarUrl: user.avatarUrl,
+    universityName: user.university?.name ?? fallbackUniversityName,
+  };
+}
+
+export async function fetchProfile(
+  _user: { id: string },
+  universityName: string,
+): Promise<Profile> {
+  const user = await apiClient<BackendUser>('/api/users/me', {
+    token: getAccessToken(),
+  });
+  return mapToProfile(user, universityName);
 }
 
 export async function updateProfile(payload: UpdateProfileRequest): Promise<Profile> {
-  if (isMockModeEnabled()) {
-    const user = JSON.parse(localStorage.getItem('campus-marketplace-auth') ?? '{}')?.state?.user as User | undefined;
-    if (!user) throw new Error('No active user.');
-    return { ...profileFromUser(user, user.university?.name ?? 'Addis Ababa University'), ...payload };
-  }
-  return apiClient<Profile>('/api/users/me', { method: 'PATCH', body: payload, token: getAccessToken() });
+  const { year: _year, ...body } = payload;
+  const user = await apiClient<BackendUser>('/api/users/me', {
+    method: 'PATCH',
+    body,
+    token: getAccessToken(),
+  });
+  return mapToProfile(user, user.university?.name ?? '');
 }

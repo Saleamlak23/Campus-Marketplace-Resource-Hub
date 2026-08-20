@@ -15,6 +15,17 @@ interface AuthState {
   isAdmin: () => boolean;
 }
 
+function normalizeRole(role: string): UserRole {
+  return role.toLowerCase() as UserRole;
+}
+
+function normalizeUser(user: User): User {
+  return {
+    ...user,
+    role: normalizeRole(user.role as string),
+  };
+}
+
 function resolveUniversity(user: User): University | null {
   return user.university ?? null;
 }
@@ -29,11 +40,12 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       setAuth: (payload) => {
+        const user = normalizeUser(payload.user);
         set({
-          user: payload.user,
+          user,
           accessToken: payload.accessToken,
           refreshToken: payload.refreshToken,
-          university: resolveUniversity(payload.user),
+          university: resolveUniversity(user),
           isAuthenticated: true,
         });
       },

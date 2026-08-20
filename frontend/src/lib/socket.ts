@@ -1,58 +1,66 @@
 import { io, Socket } from 'socket.io-client';
-import { isMockModeEnabled } from './api-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:5000';
 
 export interface SocketClient {
-  connect: () => void;
+  connect: (token: string) => void;
   disconnect: () => void;
   on: (event: string, listener: (payload: unknown) => void) => SocketClient;
   off: (event: string, listener?: (payload: unknown) => void) => SocketClient;
-  emit: (event: string, payload: unknown) => SocketClient;
+  emit: (event: string, payload: unknown, ack?: (res: unknown) => void) => SocketClient;
 }
 
-class MockSocketClient implements SocketClient {
-  private listeners = new Map<string, Set<(payload: unknown) => void>>();
+let socket: Socket | null = null;
 
-  connect() {}
-  disconnect() {}
+function createSocket(token: string): Socket {
+  if (socket) {
+    socket.disconnect();
+  }
+  socket = io(SOCKET_URL, {
+    autoConnect: false,
+    auth: { token },
+    transports: ['websocket', 'polling'],
+  });
+  return socket;
+}
+
+class RealSocketClient implements SocketClient {
+  connect(token: string) {
+    createSocket(token);
+    socket?.connect();
+  }
+
+  disconnect() {
+    socket?.disconnect();
+    socket = null;
+  }
 
   on(event: string, listener: (payload: unknown) => void) {
-    const eventListeners = this.listeners.get(event) ?? new Set();
-    eventListeners.add(listener);
-    this.listeners.set(event, eventListeners);
+    socket?.on(event, listener as (...args: unknown[]) => void);
     return this;
   }
 
   off(event: string, listener?: (payload: unknown) => void) {
-    if (listener) this.listeners.get(event)?.delete(listener);
-    else this.listeners.delete(event);
-    return this;
-  }
-
-  emit(event: string, payload: unknown) {
-    this.publish(event, payload);
-    if (event === 'message:send') {
-      window.setTimeout(() => this.publish('message:received', payload), 350);
+    if (listener) {
+      socket?.off(event, listener as (...args: unknown[]) => void);
+    } else {
+      socket?.off(event);
     }
     return this;
   }
 
-  private publish(event: string, payload: unknown) {
-    this.listeners.get(event)?.forEach((listener) => listener(payload));
+  emit(event: string, payload: unknown, ack?: (res: unknown) => void) {
+    if (ack) {
+      socket?.emit(event, payload, ack);
+    } else {
+      socket?.emit(event, payload);
+    }
+    return this;
   }
 }
 
-let socket: Socket | null = null;
-let mockSocket: MockSocketClient | null = null;
+const socketClient = new RealSocketClient();
 
 export function getSocket(): SocketClient {
-  if (isMockModeEnabled()) {
-    mockSocket ??= new MockSocketClient();
-    return mockSocket;
-  }
-  if (!socket) {
-    socket = io(SOCKET_URL, { autoConnect: false });
-  }
-  return socket as unknown as SocketClient;
+  return socketClient;
 }

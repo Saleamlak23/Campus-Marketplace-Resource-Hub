@@ -101,6 +101,11 @@ export class AuthService {
         role: user.role,
         universityId: user.universityId,
         isVerified: user.isVerified,
+        universityIdNumber: user.universityIdNumber,
+        department: user.department,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt.toISOString(),
+        university: { id: university.id, name: university.name, allowedEmailDomains: university.allowedEmailDomains },
       },
       ...tokens,
     };
@@ -109,6 +114,11 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        university: {
+          select: { id: true, name: true, allowedEmailDomains: true },
+        },
+      },
     });
 
     if (!user) {
@@ -134,6 +144,11 @@ export class AuthService {
         role: user.role,
         universityId: user.universityId,
         isVerified: user.isVerified,
+        universityIdNumber: user.universityIdNumber,
+        department: user.department,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt.toISOString(),
+        university: user.university,
       },
       ...tokens,
     };

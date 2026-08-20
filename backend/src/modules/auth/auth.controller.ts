@@ -37,19 +37,6 @@ export class AuthController {
 
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
-      const { token } = req.body;
-      if (!token) {
-        return res.status(400).json({ success: false, error: 'Token is required' });
-      }
-      const result = await authService.verifyEmail(token);
-      res.status(200).json({ success: true, data: result });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async verifyEmail(req: Request, res: Response, next: NextFunction) {
-    try {
       const { token } = req.body as { token?: unknown };
       if (typeof token !== 'string' || !token) {
         return res.status(400).json({ success: false, error: 'Token is required' });

@@ -9,6 +9,7 @@ import type {
   UserProfileResponse,
   VerifyEmailRequest,
 } from '../../types';
+import type { University, User } from '../../types';
 
 export async function login(payload: LoginRequest): Promise<AuthResponse> {
   return apiClient<AuthResponse>('/api/auth/login', {
@@ -43,15 +44,20 @@ export async function verifyEmail(payload: VerifyEmailRequest): Promise<{ messag
 }
 
 export async function fetchUniversities(): Promise<UniversitiesResponse> {
-  return apiClient<UniversitiesResponse>('/api/universities', {
+  const data = await apiClient<UniversitiesResponse | University[]>('/api/universities', {
     method: 'GET',
     skipAuth: true,
   });
+  if (Array.isArray(data)) {
+    return { universities: data };
+  }
+  return data;
 }
 
 export async function fetchCurrentUser(): Promise<UserProfileResponse> {
-  return apiClient<UserProfileResponse>('/api/users/me', {
+  const user = await apiClient<User>('/api/users/me', {
     method: 'GET',
     token: getAccessToken(),
   });
+  return { user };
 }

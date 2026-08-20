@@ -14,7 +14,16 @@ export class UsersService {
         isVerified: true,
         department: true,
         universityIdNumber: true,
+        avatarUrl: true,
+        bio: true,
         createdAt: true,
+        university: {
+          select: {
+            id: true,
+            name: true,
+            allowedEmailDomains: true,
+          },
+        },
       },
     });
 
@@ -25,13 +34,24 @@ export class UsersService {
     return user;
   }
 
-  async updateUser(id: string, data: { name?: string; department?: string; universityIdNumber?: string }) {
+  async updateUser(
+    id: string,
+    data: {
+      name?: string;
+      department?: string;
+      universityIdNumber?: string;
+      avatarUrl?: string;
+      bio?: string;
+    }
+  ) {
     const user = await prisma.user.update({
       where: { id },
       data: {
         name: data.name,
         department: data.department,
         universityIdNumber: data.universityIdNumber,
+        avatarUrl: data.avatarUrl,
+        bio: data.bio,
       },
       select: {
         id: true,
@@ -42,7 +62,16 @@ export class UsersService {
         isVerified: true,
         department: true,
         universityIdNumber: true,
+        avatarUrl: true,
+        bio: true,
         createdAt: true,
+        university: {
+          select: {
+            id: true,
+            name: true,
+            allowedEmailDomains: true,
+          },
+        },
       },
     });
 

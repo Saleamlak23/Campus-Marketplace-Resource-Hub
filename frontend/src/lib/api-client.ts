@@ -1,8 +1,6 @@
-import { handleMockRequest } from './mock-handlers';
 import type { ApiErrorBody } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000';
 
 export class ApiError extends Error {
   status: number;
@@ -42,14 +40,29 @@ function serializeBody(body: unknown): BodyInit | undefined {
 
 async function parseErrorBody(res: Response): Promise<ApiErrorBody | undefined> {
   try {
-    return (await res.json()) as ApiErrorBody;
+    const json = (await res.json()) as ApiErrorBody & { error?: string; success?: boolean };
+    const message = json.message ?? json.error ?? `API error: ${res.status}`;
+    return { message, errors: json.errors };
   } catch {
     return undefined;
   }
 }
 
-export function isMockModeEnabled(): boolean {
-  return USE_MOCK;
+/**
+ * Unwrap the standard API envelope `{ success: true, data: T }`.
+ * If the response is already the raw shape (no `data` key), return as-is.
+ */
+function unwrapEnvelope<T>(json: unknown): T {
+  if (
+    json !== null &&
+    typeof json === 'object' &&
+    'success' in json &&
+    (json as Record<string, unknown>).success === true &&
+    'data' in json
+  ) {
+    return (json as Record<string, unknown>).data as T;
+  }
+  return json as T;
 }
 
 export async function apiClient<T>(
@@ -63,18 +76,6 @@ export async function apiClient<T>(
     headers,
     body: serializeBody(body),
   };
-
-  if (USE_MOCK) {
-    try {
-      return await handleMockRequest<T>(path, requestInit);
-    } catch (error) {
-      if (error instanceof Error && 'status' in error) {
-        const status = (error as { status: number }).status;
-        throw new ApiError(status, error.message);
-      }
-      throw error;
-    }
-  }
 
   const res = await fetch(`${BASE_URL}${path}`, requestInit);
 
@@ -91,7 +92,8 @@ export async function apiClient<T>(
     return undefined as T;
   }
 
-  return res.json() as Promise<T>;
+  const json = await res.json();
+  return unwrapEnvelope<T>(json);
 }
 
 /** @deprecated Use apiClient instead */
@@ -100,4 +102,9 @@ export async function apiFetch<T>(
   options?: RequestInit,
 ): Promise<T> {
   return apiClient<T>(path, options);
+}
+
+/** Returns true when NOT using mock API (i.e., talking to live backend) */
+export function isMockModeEnabled(): boolean {
+  return false;
 }

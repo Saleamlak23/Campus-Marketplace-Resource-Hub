@@ -1,8 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { config } from '../config/env.js';
-import * as chatService from '../modules/chat/chat.service.js';
-import { createMessageSchema } from '../modules/chat/chat.validation.js';
+import { config } from '../config/env';
+import * as chatService from '../modules/chat/chat.service';
+import { createMessageSchema } from '../modules/chat/chat.validation';
 
 interface SocketUser {
   userId: string;

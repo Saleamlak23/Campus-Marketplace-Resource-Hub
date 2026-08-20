@@ -36,7 +36,8 @@ model User {
   department       String?
   passwordHash     String
   avatarUrl        String?
-  
+  bio              String?
+
   role             UserRole @default(STUDENT)
   isBanned         Boolean  @default(false)
   banReason        String?

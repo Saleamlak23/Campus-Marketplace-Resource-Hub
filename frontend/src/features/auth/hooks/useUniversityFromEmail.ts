@@ -12,13 +12,17 @@ function extractEmailDomain(email: string): string | null {
   return match?.[1] ?? null;
 }
 
+function normalizeDomain(domain: string): string {
+  return domain.replace(/^@/, '').toLowerCase();
+}
+
 function findUniversityByDomain(
   universities: University[],
   domain: string,
 ): University | undefined {
-  const normalized = domain.toLowerCase();
+  const normalized = normalizeDomain(domain);
   return universities.find((uni) =>
-    uni.allowedEmailDomains.some((allowed) => allowed.toLowerCase() === normalized),
+    uni.allowedEmailDomains.some((allowed) => normalizeDomain(allowed) === normalized),
   );
 }
 
