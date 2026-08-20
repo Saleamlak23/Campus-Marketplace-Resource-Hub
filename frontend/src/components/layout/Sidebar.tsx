@@ -10,7 +10,9 @@ interface SidebarLink {
 const links: SidebarLink[] = [
   { to: '/dashboard', label: 'Overview' },
   { to: '/dashboard/listings', label: 'My Listings' },
-  { to: '/dashboard/messages', label: 'Messages' },
+  { to: '/profile', label: 'My Profile' },
+  { to: '/chat', label: 'Messages' },
+  { to: '/tutoring', label: 'Tutoring' },
   { to: '/admin', label: 'Admin Panel', adminOnly: true },
 ];
 

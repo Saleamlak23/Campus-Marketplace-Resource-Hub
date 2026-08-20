@@ -9,18 +9,11 @@ import ListingDetailPage from '../pages/ListingDetailPage';
 import CreateListingPage from '../pages/CreateListingPage';
 import EditListingPage from '../pages/EditListingPage';
 import MyListingsPage from '../pages/MyListingsPage';
+import ProfilePage from '../pages/ProfilePage';
+import ChatPage from '../pages/ChatPage';
+import TutoringPage from '../pages/TutoringPage';
+import AdminPage from '../pages/AdminPage';
 import { AuthLoadingGate, GuestRoute, ProtectedRoute } from './ProtectedRoute';
-
-function AdminPlaceholderPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-text">Admin Panel</h1>
-      <p className="mt-2 text-text-muted">
-        Admin moderation tools will be implemented in Trunk Task C.
-      </p>
-    </div>
-  );
-}
 
 function PublicLayout() {
   return <MainLayout />;
@@ -63,9 +56,18 @@ export default function AppRouter() {
             </Route>
           </Route>
 
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/chat/:conversationId" element={<ChatPage />} />
+              <Route path="/tutoring" element={<TutoringPage />} />
+            </Route>
+          </Route>
+
           <Route element={<ProtectedRoute requireAdmin />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/admin" element={<AdminPlaceholderPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
           </Route>
 
