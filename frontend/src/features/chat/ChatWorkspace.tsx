@@ -8,7 +8,6 @@ import { useAuthStore } from '../../store/authStore';
 import {
   fetchConversation,
   fetchConversations,
-  sendMessage,
   type ChatMessage,
 } from './api';
 
@@ -72,11 +71,22 @@ export default function ChatWorkspace() {
     setDraft('');
 
     try {
-      await sendMessage(active.id, content);
+      await new Promise<void>((resolve, reject) => {
+        getSocket().emit(
+          'send_message',
+          { conversationId: active.id, content },
+          (response: unknown) => {
+            const result = response as { success?: boolean; error?: string };
+            if (result.success) {
+              resolve();
+            } else {
+              reject(new Error(result.error ?? 'Message could not be sent'));
+            }
+          },
+        );
+      });
       qc.invalidateQueries({ queryKey: ['conversation', active.id] });
       qc.invalidateQueries({ queryKey: ['conversations'] });
-
-      getSocket().emit('send_message', { conversationId: active.id, content });
     } catch {
       setDraft(content);
     }
