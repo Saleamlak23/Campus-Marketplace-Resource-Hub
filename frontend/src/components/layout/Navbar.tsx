@@ -32,6 +32,9 @@ export default function Navbar() {
           >
             {isAuthenticated && (
               <>
+                <NavLink to="/" className={navLinkClass} end>
+                  Home
+                </NavLink>
                 <NavLink to="/listings" className={navLinkClass}>
                   Browse
                 </NavLink>
@@ -43,6 +46,9 @@ export default function Navbar() {
                 </NavLink>
                 <NavLink to="/tutoring" className={navLinkClass}>
                   Tutoring
+                </NavLink>
+                <NavLink to="/profile" className={navLinkClass}>
+                  Profile
                 </NavLink>
               </>
             )}
@@ -64,8 +70,17 @@ export default function Navbar() {
                 Log out
               </Button>
             </>
-          ) : null}
-          <Button
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">Log in</Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm">Sign up</Button>
+              </Link>
+            </>
+          )}
+          {isAuthenticated && <Button
             variant="ghost"
             size="sm"
             className="md:hidden"
@@ -74,13 +89,12 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen((open) => !open)}
           >
             {isMobileMenuOpen ? '✕' : '☰'}
-          </Button>
+          </Button>}
         </div>
       </div>
       {isMobileMenuOpen && (
         <nav className="border-t border-border bg-surface px-4 py-3 shadow-md md:hidden" aria-label="Mobile navigation">
           <div className="mx-auto grid max-w-7xl gap-1">
-            <MobileLink to="/" onNavigate={() => setMobileMenuOpen(false)}>Home</MobileLink>
             {isAuthenticated && <>
               <MobileLink to="/dashboard" onNavigate={() => setMobileMenuOpen(false)}>Dashboard</MobileLink>
               <MobileLink to="/listings" onNavigate={() => setMobileMenuOpen(false)}>Browse</MobileLink>
