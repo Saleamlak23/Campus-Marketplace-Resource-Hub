@@ -4,7 +4,7 @@ import Button from '../common/Button';
 import { useAuthStore } from '../../store/authStore';
 
 export default function Navbar() {
-  const { isAuthenticated, user, university, clearAuth } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -32,23 +32,14 @@ export default function Navbar() {
           >
             {isAuthenticated && (
               <>
-                <NavLink to="/" className={navLinkClass} end>
-                  Home
+                <NavLink to="/dashboard" className={navLinkClass}>
+                  Dashboard
                 </NavLink>
                 <NavLink to="/listings" className={navLinkClass}>
                   Browse
                 </NavLink>
-                <NavLink to="/dashboard" className={navLinkClass}>
-                  Dashboard
-                </NavLink>
-                <NavLink to="/chat" className={navLinkClass}>
-                  Messages
-                </NavLink>
                 <NavLink to="/tutoring" className={navLinkClass}>
                   Tutoring
-                </NavLink>
-                <NavLink to="/profile" className={navLinkClass}>
-                  Profile
                 </NavLink>
               </>
             )}
@@ -56,19 +47,26 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthenticated && university && (
-            <span className="hidden text-xs text-text-muted lg:inline">
-              {university.name}
-            </span>
-          )}
           {isAuthenticated ? (
             <>
-              <span className="hidden text-sm text-text sm:inline">
-                {user?.name}
-              </span>
-              <Button variant="outline" size="sm" onClick={clearAuth}>
-                Log out
-              </Button>
+              <Link
+                to="/profile"
+                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                aria-label="Open your profile"
+                title="Profile"
+              >
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt=""
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+                    {user?.name?.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </Link>
             </>
           ) : (
             <>
@@ -98,9 +96,7 @@ export default function Navbar() {
             {isAuthenticated && <>
               <MobileLink to="/dashboard" onNavigate={() => setMobileMenuOpen(false)}>Dashboard</MobileLink>
               <MobileLink to="/listings" onNavigate={() => setMobileMenuOpen(false)}>Browse</MobileLink>
-              <MobileLink to="/chat" onNavigate={() => setMobileMenuOpen(false)}>Messages</MobileLink>
               <MobileLink to="/tutoring" onNavigate={() => setMobileMenuOpen(false)}>Tutoring</MobileLink>
-              <MobileLink to="/profile" onNavigate={() => setMobileMenuOpen(false)}>Profile</MobileLink>
             </>}
           </div>
         </nav>

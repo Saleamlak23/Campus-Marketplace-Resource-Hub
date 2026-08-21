@@ -34,6 +34,7 @@ export default function AppRouter() {
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/landing" element={<HomePage />} />
           </Route>
 
           <Route element={<GuestRoute />}>
