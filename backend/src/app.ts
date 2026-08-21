@@ -26,7 +26,8 @@ app.use(
   })
 );
 
-app.use(express.json());
+// Listing images may be sent as base64 data URLs when Cloudinary is unavailable.
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Request logging

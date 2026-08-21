@@ -2,9 +2,8 @@
  * Client-side unsigned upload to Cloudinary for listing images.
  *
  * Requires VITE_CLOUDINARY_CLOUD_NAME + VITE_CLOUDINARY_UPLOAD_PRESET to be set
- * (see .env.example). Until real Cloudinary credentials are wired up in the
- * Integration Phase, this falls back to a local object URL so the Listings UI
- * remains fully usable against the mock API.
+ * (see .env.example). When Cloudinary is not configured, images are encoded as
+ * data URLs so they can still be persisted in the listing's PostgreSQL record.
  */
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -46,9 +45,12 @@ async function uploadToCloudinary(file: File): Promise<string> {
   return data.secure_url;
 }
 
-function readAsObjectUrl(file: File): Promise<string> {
-  return new Promise((resolve) => {
-    resolve(URL.createObjectURL(file));
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new CloudinaryUploadError('Image could not be read.'));
+    reader.readAsDataURL(file);
   });
 }
 
@@ -67,12 +69,11 @@ export function validateImageFile(file: File): string | undefined {
 
 /**
  * Uploads a listing image and returns its hosted URL. Uses Cloudinary when
- * configured, otherwise a local preview URL so development/demo work
- * without real credentials.
+ * configured, otherwise a data URL that can be stored in PostgreSQL.
  */
 export async function uploadListingImage(file: File): Promise<string> {
   if (isCloudinaryConfigured()) {
     return uploadToCloudinary(file);
   }
-  return readAsObjectUrl(file);
+  return readAsDataUrl(file);
 }

@@ -18,6 +18,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  const requestError = err as Error & { status?: number; type?: string };
+
+  if (requestError.status === 413 || requestError.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      error: 'The images are too large to publish. Please use smaller images.',
+    });
+  }
+
   // Log the full error with stack trace
   console.log('❌ ERROR CAUGHT:');
   console.log('Message:', err.message);
