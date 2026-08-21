@@ -1,4 +1,5 @@
 import type { ApiErrorBody } from '../types';
+import { useAuthStore } from '../store/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000';
 
@@ -81,6 +82,12 @@ export async function apiClient<T>(
 
   if (!res.ok) {
     const errorBody = await parseErrorBody(res);
+    if (res.status === 401 && options.token && !options.skipAuth) {
+      useAuthStore.getState().clearAuth();
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login');
+      }
+    }
     throw new ApiError(
       res.status,
       errorBody?.message ?? `API error: ${res.status}`,
