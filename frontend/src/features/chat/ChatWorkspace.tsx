@@ -36,12 +36,6 @@ export default function ChatWorkspace() {
   const [draft, setDraft] = useState('');
 
   useEffect(() => {
-    if (!conversationId && conversations[0]) {
-      navigate(`/chat/${conversations[0].id}`, { replace: true });
-    }
-  }, [conversationId, conversations, navigate]);
-
-  useEffect(() => {
     if (!accessToken || !activeId) return;
 
     const socket = getSocket();
@@ -95,8 +89,8 @@ export default function ChatWorkspace() {
   if (isLoading) return <Card>Loading conversations…</Card>;
 
   return (
-    <div className="h-[calc(100vh-10rem)] min-h-[580px] overflow-hidden rounded-xl border border-border bg-surface shadow-sm md:grid md:grid-cols-[20rem_1fr]">
-      <aside className="border-b border-border md:border-b-0 md:border-r">
+    <div className="flex h-[calc(100vh-10rem)] min-h-145 flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm md:grid md:grid-cols-[20rem_1fr]">
+      <aside className={`${conversationId ? 'hidden md:block' : 'block'} border-b border-border md:border-b-0 md:border-r`}>
         <div className="border-b border-border p-4">
           <h1 className="text-xl font-bold">Messages</h1>
         </div>
@@ -130,10 +124,19 @@ export default function ChatWorkspace() {
         </div>
       </aside>
 
-      <section className="flex min-h-0 flex-col">
+      <section className={`${conversationId ? 'flex' : 'hidden md:flex'} min-h-0 flex-1 flex-col`}>
         {active ? (
           <>
-            <header className="border-b border-border p-4">
+            <header className="flex items-center gap-3 border-b border-border p-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={() => navigate('/chat')}
+                aria-label="Back to conversations"
+              >
+                ←
+              </Button>
               <h2 className="font-semibold">{active.counterpart.name}</h2>
             </header>
             <div className="flex-1 space-y-3 overflow-y-auto bg-surface-muted p-4">
@@ -169,7 +172,7 @@ export default function ChatWorkspace() {
               ))}
             </div>
             <form
-              className="flex gap-2 border-t border-border p-3"
+              className="flex shrink-0 gap-2 border-t border-border bg-surface p-3"
               onSubmit={(event) => {
                 event.preventDefault();
                 void send();
