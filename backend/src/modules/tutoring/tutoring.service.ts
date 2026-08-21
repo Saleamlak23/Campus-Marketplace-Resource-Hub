@@ -1,6 +1,7 @@
 import { BookingStatus, Prisma } from '@prisma/client';
 import prisma from '../../lib/prisma';
 import { AppError } from '../../middleware/errorHandler';
+import { ensureConversation } from '../chat/chat.service';
 
 const tutorSelect = {
   id: true,
@@ -77,5 +78,15 @@ export async function updateBookingStatus(userId: string, universityId: string, 
   if (status === 'COMPLETED' && booking.status !== 'ACCEPTED') {
     throw new AppError('Only accepted bookings can be completed', 409);
   }
-  return prisma.booking.update({ where: { id: bookingId }, data: { status }, include: bookingInclude });
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status },
+    include: bookingInclude,
+  });
+
+  if (status === 'ACCEPTED') {
+    await ensureConversation(booking.tutorId, universityId, booking.studentId);
+  }
+
+  return updatedBooking;
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
@@ -20,6 +21,7 @@ import {
 
 export default function TutoringHub() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { user } = useAuthStore();
 
   const { data: tutors = [] } = useQuery({
@@ -69,7 +71,13 @@ export default function TutoringHub() {
   const change = useMutation({
     mutationFn: ({ id, status }: { id: string; status: BookingStatus }) =>
       updateBooking(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookings'] }),
+    onSuccess: (_booking, variables) => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      if (variables.status === 'ACCEPTED') {
+        qc.invalidateQueries({ queryKey: ['conversations'] });
+        navigate('/chat');
+      }
+    },
   });
 
   const publishTutor = useMutation({

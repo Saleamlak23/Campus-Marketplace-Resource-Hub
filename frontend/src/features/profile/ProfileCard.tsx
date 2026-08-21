@@ -13,7 +13,7 @@ const years = Array.from({ length: 7 }, (_, index) => ({ value: String(index + 1
 
 export default function ProfileCard() {
   const queryClient = useQueryClient();
-  const { user, university, updateUser } = useAuthStore();
+  const { user, university, updateUser, clearAuth } = useAuthStore();
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: () => fetchProfile(user!, university?.name ?? 'Addis Ababa University'),
@@ -60,7 +60,10 @@ export default function ProfileCard() {
         <Avatar name={profile.name} url={avatar} />
         <div><h1 className="text-2xl font-bold">{profile.name}</h1><p className="text-text-muted">{profile.email}</p><Badge variant="primary" className="mt-2">{profile.universityName}</Badge></div>
       </div>
-      {!editing && <Button onClick={() => setEditing(true)}>Edit profile</Button>}
+      {!editing && <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={clearAuth}>Log out</Button>
+        <Button onClick={() => setEditing(true)}>Edit profile</Button>
+      </div>}
     </div>
     {formError && <p className="mt-5 rounded-lg bg-danger-50 p-3 text-sm text-danger-600" role="alert">{formError}</p>}
     <div className="mt-7 grid gap-5 sm:grid-cols-2">
