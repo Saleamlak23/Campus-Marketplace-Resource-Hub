@@ -8,6 +8,12 @@ function routeId(req: Request) {
   return id;
 }
 
+function normalizeCategory(category: unknown) {
+  if (category === 'PAST_EXAM') return 'EXAM_PAPER';
+  if (category === 'EQUIPMENT') return 'OTHER';
+  return category;
+}
+
 // 1. Create a listing
 export async function createListingHandler(
   req: Request,
@@ -24,6 +30,7 @@ export async function createListingHandler(
 
     const listing = await listingService.createListing({
       ...req.body,
+      category: normalizeCategory(req.body.category),
       sellerId: userId,
       universityId,
     });
@@ -136,7 +143,12 @@ export async function updateListingHandler(
         .json({ success: false, error: 'Forbidden: You can only edit your own listings' });
     }
 
-    const updatedListing = await listingService.updateListing(id, req.body);
+    const updatedListing = await listingService.updateListing(id, {
+      ...req.body,
+      ...(req.body.category !== undefined
+        ? { category: normalizeCategory(req.body.category) }
+        : {}),
+    });
     return res.status(200).json({ success: true, data: { listing: updatedListing } });
   } catch (error) {
     next(error);

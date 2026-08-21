@@ -1,48 +1,15 @@
 /**
- * Client-side unsigned upload to Cloudinary for listing images.
- *
- * Requires VITE_CLOUDINARY_CLOUD_NAME + VITE_CLOUDINARY_UPLOAD_PRESET to be set
- * (see .env.example). When Cloudinary is not configured, images are encoded as
- * data URLs so they can still be persisted in the listing's PostgreSQL record.
+ * Uploads listing images through the backend Cloudinary integration. If that
+ * service is unavailable, images are encoded as data URLs for PostgreSQL.
  */
-
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+import { apiClient } from './api-client';
+import { getAccessToken } from '../store/authStore';
 
 export class CloudinaryUploadError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CloudinaryUploadError';
   }
-}
-
-export function isCloudinaryConfigured(): boolean {
-  return Boolean(CLOUD_NAME && UPLOAD_PRESET);
-}
-
-interface CloudinaryUploadResponse {
-  secure_url: string;
-}
-
-async function uploadToCloudinary(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', UPLOAD_PRESET);
-
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    },
-  );
-
-  if (!res.ok) {
-    throw new CloudinaryUploadError('Image upload failed. Please try again.');
-  }
-
-  const data = (await res.json()) as CloudinaryUploadResponse;
-  return data.secure_url;
 }
 
 function readAsDataUrl(file: File): Promise<string> {
@@ -68,12 +35,21 @@ export function validateImageFile(file: File): string | undefined {
 }
 
 /**
- * Uploads a listing image and returns its hosted URL. Uses Cloudinary when
- * configured, otherwise a data URL that can be stored in PostgreSQL.
+ * Uploads through backend Cloudinary first. If that fails, return a data URL
+ * that the backend stores in PostgreSQL.
  */
 export async function uploadListingImage(file: File): Promise<string> {
-  if (isCloudinaryConfigured()) {
-    return uploadToCloudinary(file);
+  const dataUrl = await readAsDataUrl(file);
+
+  try {
+    const result = await apiClient<{ url: string }>('/api/uploads/listing-image', {
+      method: 'POST',
+      body: { dataUrl },
+      token: getAccessToken(),
+    });
+    return result.url;
+  } catch {
+    // PostgreSQL is the durable fallback when the external upload is unavailable.
+    return dataUrl;
   }
-  return readAsDataUrl(file);
 }

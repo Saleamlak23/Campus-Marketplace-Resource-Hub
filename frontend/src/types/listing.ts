@@ -1,5 +1,5 @@
 // Backend uses uppercase enums - keep them as-is from the API
-export type ListingCategory = 'TEXTBOOK' | 'PAST_EXAM' | 'EQUIPMENT' | 'OTHER';
+export type ListingCategory = 'TEXTBOOK' | 'EXAM_PAPER' | 'OTHER';
 
 export type ListingCondition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'POOR';
 

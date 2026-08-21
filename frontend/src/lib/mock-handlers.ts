@@ -125,7 +125,7 @@ let mockListings: MockListingRecord[] = [
     title: 'Digital Logic Design - Past Exam Papers (2022-2024)',
     description:
       'Compiled past exam papers and worked solutions for Digital Logic Design, three academic years. Great for exam prep.',
-    category: 'PAST_EXAM',
+    category: 'EXAM_PAPER',
     condition: 'NEW',
     price: 150,
     department: 'Electrical & Computer Engineering',
@@ -142,7 +142,7 @@ let mockListings: MockListingRecord[] = [
     title: 'Scientific Calculator - Casio fx-991EX',
     description:
       'Barely used scientific calculator, comes with original case and manual. Perfect for engineering courses.',
-    category: 'EQUIPMENT',
+    category: 'OTHER',
     condition: 'LIKE_NEW',
     price: 1200,
     department: null,

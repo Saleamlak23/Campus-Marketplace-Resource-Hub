@@ -6,8 +6,7 @@ import type {
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   TEXTBOOK: 'Textbook',
-  PAST_EXAM: 'Past Exam Paper',
-  EQUIPMENT: 'Equipment',
+  EXAM_PAPER: 'Past Exam Paper',
   OTHER: 'Other',
 };
 

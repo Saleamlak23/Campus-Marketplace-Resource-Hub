@@ -12,6 +12,7 @@ import reviewsRoutes from './modules/reviews/reviews.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import tutoringRoutes from './modules/tutoring/tutoring.routes';
+import uploadsRoutes from './modules/uploads/uploads.routes';
 
 const app = express();
 
@@ -80,6 +81,7 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', tutoringRoutes);
+app.use('/api/uploads', uploadsRoutes);
 
 // ============================================
 // 404 HANDLER
