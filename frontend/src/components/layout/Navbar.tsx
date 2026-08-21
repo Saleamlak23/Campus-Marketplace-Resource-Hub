@@ -4,7 +4,7 @@ import Button from '../common/Button';
 import { useAuthStore } from '../../store/authStore';
 
 export default function Navbar() {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isAdmin, clearAuth } = useAuthStore();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -27,18 +27,18 @@ export default function Navbar() {
             </span>
           </Link>
           <nav
-            className="hidden items-center gap-1 md:flex"
+            className="flex min-w-0 items-center gap-0 md:gap-1"
             aria-label="Main navigation"
           >
             {isAuthenticated && (
               <>
-                <NavLink to="/dashboard" className={navLinkClass}>
+                <NavLink to="/dashboard" className={({ isActive }) => `${navLinkClass({ isActive })} px-1 text-xs md:px-3 md:text-sm`}>
                   Dashboard
                 </NavLink>
-                <NavLink to="/listings" className={navLinkClass}>
+                <NavLink to="/listings" className={({ isActive }) => `${navLinkClass({ isActive })} px-1 text-xs md:px-3 md:text-sm`}>
                   Browse
                 </NavLink>
-                <NavLink to="/tutoring" className={navLinkClass}>
+                <NavLink to="/tutoring" className={({ isActive }) => `${navLinkClass({ isActive })} px-1 text-xs md:px-3 md:text-sm`}>
                   Tutoring
                 </NavLink>
               </>
@@ -94,9 +94,14 @@ export default function Navbar() {
         <nav className="border-t border-border bg-surface px-4 py-3 shadow-md md:hidden" aria-label="Mobile navigation">
           <div className="mx-auto grid max-w-7xl gap-1">
             {isAuthenticated && <>
-              <MobileLink to="/dashboard" onNavigate={() => setMobileMenuOpen(false)}>Dashboard</MobileLink>
-              <MobileLink to="/listings" onNavigate={() => setMobileMenuOpen(false)}>Browse</MobileLink>
-              <MobileLink to="/tutoring" onNavigate={() => setMobileMenuOpen(false)}>Tutoring</MobileLink>
+              <MobileLink to="/dashboard" onNavigate={() => setMobileMenuOpen(false)}>Overview</MobileLink>
+              <MobileLink to="/dashboard/listings" onNavigate={() => setMobileMenuOpen(false)}>My Listings</MobileLink>
+              <MobileLink to="/profile" onNavigate={() => setMobileMenuOpen(false)}>My Profile</MobileLink>
+              <MobileLink to="/chat" onNavigate={() => setMobileMenuOpen(false)}>Messages</MobileLink>
+              {isAdmin() && <MobileLink to="/admin" onNavigate={() => setMobileMenuOpen(false)}>Admin Panel</MobileLink>}
+              <Button variant="outline" className="mt-2 w-full" onClick={clearAuth}>
+                Log out
+              </Button>
             </>}
           </div>
         </nav>
