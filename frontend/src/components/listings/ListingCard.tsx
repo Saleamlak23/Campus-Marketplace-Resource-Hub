@@ -23,12 +23,12 @@ export default function ListingCard({ listing }: ListingCardProps) {
         hoverable
         className="flex h-full flex-col overflow-hidden"
       >
-        <div className="aspect-[4/3] w-full bg-surface-muted">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-muted">
           {thumbnail ? (
             <img
               src={thumbnail}
               alt={listing.title}
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-text-muted">
