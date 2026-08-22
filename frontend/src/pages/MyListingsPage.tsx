@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
+import Feedback from '../components/common/Feedback';
 import Modal from '../components/common/Modal';
 import Spinner from '../components/common/Spinner';
 import ListingStatusBadge from '../components/listings/ListingStatusBadge';
@@ -10,19 +11,26 @@ import { useMyListingsQuery } from '../features/listings/hooks/useListings';
 import { useDeleteListingMutation } from '../features/listings/hooks/useListingMutations';
 import { CATEGORY_LABELS, formatPrice } from '../features/listings/constants';
 import { useAuthStore } from '../store/authStore';
+import { getApiErrorMessage } from '../lib/api-client';
 
 export default function MyListingsPage() {
   const { user } = useAuthStore();
-  const { data, isLoading } = useMyListingsQuery(user?.id);
+  const { data, isLoading, error: listingsError } = useMyListingsQuery(user?.id);
   const deleteMutation = useDeleteListingMutation();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string>();
 
   const listings = data?.listings ?? [];
 
   async function handleConfirmDelete() {
     if (!pendingDeleteId) return;
-    await deleteMutation.mutateAsync(pendingDeleteId);
-    setPendingDeleteId(null);
+    setActionError(undefined);
+    try {
+      await deleteMutation.mutateAsync(pendingDeleteId);
+      setPendingDeleteId(null);
+    } catch (error) {
+      setActionError(getApiErrorMessage(error, 'Unable to delete the listing.'));
+    }
   }
 
   return (
@@ -41,6 +49,9 @@ export default function MyListingsPage() {
           <Button>+ New listing</Button>
         </Link>
       </div>
+
+      {listingsError && <Feedback message={getApiErrorMessage(listingsError, 'Unable to load your listings.')} />}
+      {actionError && <Feedback message={actionError} />}
 
       {isLoading ? (
         <div className="flex justify-center py-16">

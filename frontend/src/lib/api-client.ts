@@ -15,6 +15,12 @@ export class ApiError extends Error {
   }
 }
 
+export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.') {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof TypeError) return 'Unable to connect to the server.';
+  return fallback;
+}
+
 export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   token?: string | null;
@@ -78,7 +84,12 @@ export async function apiClient<T>(
     body: serializeBody(body),
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, requestInit);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, requestInit);
+  } catch {
+    throw new ApiError(0, 'Unable to connect to the server.');
+  }
 
   if (!res.ok) {
     const errorBody = await parseErrorBody(res);

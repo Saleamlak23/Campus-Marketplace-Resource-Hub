@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
+import Feedback from '../components/common/Feedback';
 import ListingFilters from '../components/listings/ListingFilters';
 import ListingGrid from '../components/listings/ListingGrid';
 import Pagination from '../components/listings/Pagination';
@@ -8,6 +9,7 @@ import { useListingsQuery } from '../features/listings/hooks/useListings';
 import { useListingsFilterStore } from '../store/listingsFilterStore';
 import { useAuthStore } from '../store/authStore';
 import type { ListingCategory, ListingsQuery } from '../types';
+import { getApiErrorMessage } from '../lib/api-client';
 
 export default function ListingsPage() {
   const { university } = useAuthStore();
@@ -24,7 +26,7 @@ export default function ListingsPage() {
     pageSize: 12,
   };
 
-  const { data, isLoading } = useListingsQuery(query);
+  const { data, isLoading, error } = useListingsQuery(query);
 
   return (
     <div className="space-y-6">
@@ -46,6 +48,8 @@ export default function ListingsPage() {
       </div>
 
       <ListingFilters />
+
+      {error && <Feedback message={getApiErrorMessage(error, 'Unable to load listings.')} />}
 
       <ListingGrid listings={data?.listings ?? []} isLoading={isLoading} />
 
