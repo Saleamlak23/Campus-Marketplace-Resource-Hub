@@ -48,7 +48,7 @@ export default function Select({
           {...props}
         >
           {placeholder && (
-            <option value="" disabled>
+            <option value="">
               {placeholder}
             </option>
           )}
