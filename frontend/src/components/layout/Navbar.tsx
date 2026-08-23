@@ -1,11 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import Button from '../common/Button';
 import { useAuthStore } from '../../store/authStore';
 
+type Theme = 'light' | 'dark';
+
+function getInitialTheme(): Theme {
+  const savedTheme = localStorage.getItem('campus-marketplace-theme');
+  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export default function Navbar() {
   const { isAuthenticated, user, isAdmin, clearAuth } = useAuthStore();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('campus-marketplace-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((currentTheme) => currentTheme === 'light' ? 'dark' : 'light');
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -47,6 +63,15 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            onClick={toggleTheme}
+          >
+            <span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
+          </button>
           {isAuthenticated ? (
             <>
               <Link
