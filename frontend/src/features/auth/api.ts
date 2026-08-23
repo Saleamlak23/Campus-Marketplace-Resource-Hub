@@ -4,6 +4,7 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  RegisterResponse,
   RefreshRequest,
   UniversitiesResponse,
   UserProfileResponse,
@@ -19,8 +20,8 @@ export async function login(payload: LoginRequest): Promise<AuthResponse> {
   });
 }
 
-export async function register(payload: RegisterRequest): Promise<AuthResponse> {
-  return apiClient<AuthResponse>('/api/auth/register', {
+export async function register(payload: RegisterRequest): Promise<RegisterResponse> {
+  return apiClient<RegisterResponse>('/api/auth/register', {
     method: 'POST',
     body: payload,
     skipAuth: true,
@@ -35,10 +36,18 @@ export async function refreshToken(payload: RefreshRequest): Promise<AuthRespons
   });
 }
 
-export async function verifyEmail(payload: VerifyEmailRequest): Promise<{ message: string }> {
-  return apiClient<{ message: string }>('/api/auth/verify-email', {
+export async function verifyEmail(payload: VerifyEmailRequest): Promise<AuthResponse> {
+  return apiClient<AuthResponse>('/api/auth/verify-email', {
     method: 'POST',
     body: payload,
+    skipAuth: true,
+  });
+}
+
+export async function resendVerification(email: string): Promise<{ email: string; message: string }> {
+  return apiClient<{ email: string; message: string }>('/api/auth/resend-verification', {
+    method: 'POST',
+    body: { email },
     skipAuth: true,
   });
 }

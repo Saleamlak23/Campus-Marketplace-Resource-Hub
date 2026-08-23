@@ -344,8 +344,7 @@ export async function handleMockRequest<T>(
       password: body.password,
     };
     mockUsers.push(newUser);
-    const tokens = createTokens(newUser.id);
-    return { ...tokens, user: stripPassword(newUser) } as T;
+    return { email: newUser.email, message: 'A verification code has been sent to your email.' } as T;
   }
 
   if (matchRoute(method, path, '/api/auth/refresh', 'POST')) {
@@ -364,10 +363,19 @@ export async function handleMockRequest<T>(
 
   if (matchRoute(method, path, '/api/auth/verify-email', 'POST')) {
     const body = parseJsonBody<VerifyEmailRequest>(options.body);
-    if (!body?.token) {
-      throw mockError(400, 'Verification token is required.');
+    if (!body?.email || body.code !== '123456') {
+      throw mockError(400, 'Invalid verification code. Use 123456 in mock mode.');
     }
-    return { message: 'Email verified successfully.' } as T;
+    const user = mockUsers.find((candidate) => candidate.email === body.email);
+    if (!user) throw mockError(400, 'User not found.');
+    const tokens = createTokens(user.id);
+    return { ...tokens, user: stripPassword(user) } as T;
+  }
+
+  if (matchRoute(method, path, '/api/auth/resend-verification', 'POST')) {
+    const body = parseJsonBody<{ email?: string }>(options.body);
+    if (!body?.email) throw mockError(400, 'Email is required.');
+    return { email: body.email, message: 'A new verification code has been sent.' } as T;
   }
 
   if (matchRoute(method, path, '/api/users/me', 'GET')) {

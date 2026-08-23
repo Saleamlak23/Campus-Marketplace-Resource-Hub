@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '../../../lib/api-client';
 import Badge from '../../../components/common/Badge';
@@ -22,6 +22,7 @@ interface FormErrors {
   department?: string;
   year?: string;
   customDepartment?: string;
+  code?: string;
   form?: string;
 }
 
@@ -54,7 +55,7 @@ const yearOptions = Array.from({ length: 9 }, (_, index) => ({
 }));
 
 export default function RegisterForm() {
-  const { register } = useAuth();
+  const { register, verifyEmail, resendVerification } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,6 +66,9 @@ export default function RegisterForm() {
   const [year, setYear] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerificationStep, setIsVerificationStep] = useState(false);
+  const [secondsRemaining, setSecondsRemaining] = useState(240);
 
   const { detectedUniversity, domain, isDomainSupported } =
     useUniversityFromEmail(email);
@@ -105,7 +109,7 @@ export default function RegisterForm() {
     setIsSubmitting(true);
 
     try {
-      await register({
+      const response = await register({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
@@ -113,6 +117,9 @@ export default function RegisterForm() {
         department: department === 'Other' ? customDepartment.trim() : department || undefined,
         year: year ? Number(year) : undefined,
       });
+      setEmail(response.email);
+      setSecondsRemaining(240);
+      setIsVerificationStep(true);
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -122,6 +129,113 @@ export default function RegisterForm() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  useEffect(() => {
+    if (!isVerificationStep || secondsRemaining === 0) return undefined;
+    const timer = window.setInterval(() => {
+      setSecondsRemaining((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isVerificationStep, secondsRemaining]);
+
+  async function handleResendCode() {
+    if (secondsRemaining > 0 || isSubmitting) return;
+    setErrors({});
+    setIsSubmitting(true);
+    try {
+      await resendVerification(email);
+      setVerificationCode('');
+      setSecondsRemaining(240);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : 'Unable to send a new code. Please try again.';
+      setErrors({ form: message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleVerificationSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setErrors({ code: 'Enter the 6-digit code from your email.' });
+      return;
+    }
+
+    setErrors({});
+    setIsSubmitting(true);
+    try {
+      await verifyEmail(email, verificationCode);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : 'Unable to verify your email. Please try again.';
+      setErrors({ form: message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isVerificationStep) {
+    return (
+      <Card className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <Badge variant="success" className="mb-3">Check your inbox</Badge>
+          <h1 className="text-2xl font-bold text-text">Verify your email</h1>
+          <p className="mt-2 text-sm text-text-muted">
+            Enter the 6-digit code sent to <strong className="text-text">{email}</strong>.
+          </p>
+        </div>
+
+        <form onSubmit={handleVerificationSubmit} className="space-y-4" noValidate>
+          {errors.form && (
+            <div className="rounded-lg border border-danger-500/20 bg-danger-50 px-4 py-3 text-sm text-danger-600" role="alert">
+              {errors.form}
+            </div>
+          )}
+          <Input
+            label="Verification code"
+            name="verificationCode"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            placeholder="000000"
+            value={verificationCode}
+            onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            error={errors.code}
+            required
+            autoFocus
+          />
+          <Button type="submit" className="w-full" isLoading={isSubmitting}>
+            Verify email
+          </Button>
+        </form>
+
+        <p className="mt-4 text-center text-sm text-text-muted">
+          {secondsRemaining > 0 ? (
+            <>You can request a new code in {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, '0')}</>
+          ) : (
+            <button
+              type="button"
+              className="font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50"
+              onClick={handleResendCode}
+              disabled={isSubmitting}
+            >
+              Send code again
+            </button>
+          )}
+        </p>
+
+        <button
+          type="button"
+          className="mt-5 w-full text-center text-sm font-medium text-primary-600 hover:text-primary-700"
+          onClick={() => { setIsVerificationStep(false); setErrors({}); }}
+        >
+          Back to registration
+        </button>
+      </Card>
+    );
   }
 
   return (

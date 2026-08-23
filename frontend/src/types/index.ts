@@ -2,6 +2,7 @@ export type { User, UserRole, University } from './auth';
 export type {
   AuthResponse,
   AuthTokens,
+  RegisterResponse,
   RegisterRequest,
   LoginRequest,
   RefreshRequest,

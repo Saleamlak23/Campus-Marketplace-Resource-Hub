@@ -50,7 +50,13 @@ export interface RefreshRequest {
 }
 
 export interface VerifyEmailRequest {
-  token: string;
+  email: string;
+  code: string;
+}
+
+export interface RegisterResponse {
+  email: string;
+  message: string;
 }
 
 export interface ApiErrorBody {

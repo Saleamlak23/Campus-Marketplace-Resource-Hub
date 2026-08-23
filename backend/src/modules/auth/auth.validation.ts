@@ -16,3 +16,12 @@ export const loginSchema = z.object({
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1),
 });
+
+export const verifyEmailSchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d{6}$/, 'Verification code must be 6 digits'),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email(),
+});

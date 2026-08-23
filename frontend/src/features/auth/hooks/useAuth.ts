@@ -24,12 +24,21 @@ export function useAuth() {
 
   const handleRegister = useCallback(
     async (payload: RegisterRequest) => {
-      const response = await authApi.register(payload);
+      return authApi.register(payload);
+    },
+    [],
+  );
+
+  const handleVerifyEmail = useCallback(
+    async (email: string, code: string) => {
+      const response = await authApi.verifyEmail({ email, code });
       setAuth(response);
       navigate('/dashboard');
     },
     [navigate, setAuth],
   );
+
+  const handleResendVerification = useCallback((email: string) => authApi.resendVerification(email), []);
 
   const handleLogout = useCallback(() => {
     clearAuth();
@@ -44,6 +53,8 @@ export function useAuth() {
     hasRole,
     login: handleLogin,
     register: handleRegister,
+    verifyEmail: handleVerifyEmail,
+    resendVerification: handleResendVerification,
     logout: handleLogout,
   };
 }

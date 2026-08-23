@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import prisma from '../../lib/prisma';
 import { config } from '../../config/env';
 import { AppError } from '../../middleware/errorHandler';
+import { sendVerificationCode } from '../../lib/email';
 
 export class AuthService {
   private extractUniversityDomain(email: string): string | null {
@@ -47,6 +48,9 @@ export class AuthService {
     });
 
     if (existingUser) {
+      if (!existingUser.isVerified) {
+        return this.resendVerificationCode(existingUser.email);
+      }
       throw new AppError('User already exists', 400);
     }
 
@@ -82,33 +86,18 @@ export class AuthService {
       },
     });
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.verificationToken.deleteMany({ where: { userId: user.id } });
+    const verificationToken = crypto.randomInt(100000, 1000000).toString();
     await prisma.verificationToken.create({
       data: {
         token: verificationToken,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 4 * 60 * 1000),
       },
     });
+    await sendVerificationCode(user.email, verificationToken);
 
-    const tokens = this.generateTokens(user.id, user.universityId, user.role);
-
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        universityId: user.universityId,
-        isVerified: user.isVerified,
-        universityIdNumber: user.universityIdNumber,
-        department: user.department,
-        avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt.toISOString(),
-        university: { id: university.id, name: university.name, allowedEmailDomains: university.allowedEmailDomains },
-      },
-      ...tokens,
-    };
+    return { email: user.email, message: 'A verification code has been sent to your email.' };
   }
 
   async login(email: string, password: string) {
@@ -127,6 +116,10 @@ export class AuthService {
 
     if (user.isBanned) {
       throw new AppError('User is banned', 403);
+    }
+
+    if (!user.isVerified) {
+      throw new AppError('Please verify your email before logging in', 403);
     }
 
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
@@ -182,18 +175,18 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(token: string) {
+  async verifyEmail(email: string, code: string) {
     const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token },
+      where: { token: code },
       include: { user: true },
     });
 
-    if (!verificationToken) {
-      throw new AppError('Invalid verification token', 400);
+    if (!verificationToken || verificationToken.user.email !== email) {
+      throw new AppError('Invalid verification code', 400);
     }
 
     if (verificationToken.expiresAt < new Date()) {
-      throw new AppError('Verification token has expired', 400);
+      throw new AppError('Verification code has expired', 400);
     }
 
     await prisma.user.update({
@@ -205,6 +198,47 @@ export class AuthService {
       where: { id: verificationToken.id },
     });
 
-    return { message: 'Email verified successfully' };
+    const user = await prisma.user.findUnique({
+      where: { id: verificationToken.userId },
+      include: { university: { select: { id: true, name: true, allowedEmailDomains: true } } },
+    });
+    if (!user) throw new AppError('User not found', 404);
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        universityId: user.universityId,
+        isVerified: user.isVerified,
+        universityIdNumber: user.universityIdNumber,
+        department: user.department,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt.toISOString(),
+        university: user.university,
+      },
+      ...this.generateTokens(user.id, user.universityId, user.role),
+    };
+  }
+
+  async resendVerificationCode(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.isVerified) {
+      throw new AppError('No pending email verification found', 400);
+    }
+
+    await prisma.verificationToken.deleteMany({ where: { userId: user.id } });
+    const code = crypto.randomInt(100000, 1000000).toString();
+    await prisma.verificationToken.create({
+      data: {
+        token: code,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 4 * 60 * 1000),
+      },
+    });
+    await sendVerificationCode(user.email, code);
+
+    return { email: user.email, message: 'A new verification code has been sent.' };
   }
 }
