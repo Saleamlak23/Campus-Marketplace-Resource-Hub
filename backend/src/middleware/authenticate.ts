@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 import { AppError } from './errorHandler';
+import prisma from '../lib/prisma';
 
 // Extend Express Request type to include user
 declare global {
@@ -16,7 +17,7 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // 1. Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -36,6 +37,15 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       universityId: string;
       role: string;
     };
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { isBanned: true },
+    });
+
+    if (!user || user.isBanned) {
+      throw new AppError(user?.isBanned ? 'Your account has been banned' : 'User not found', 401);
+    }
 
     // 4. Attach user to request
     req.user = {

@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
+import prisma from '../lib/prisma';
 import * as chatService from '../modules/chat/chat.service';
 import { createMessageSchema } from '../modules/chat/chat.validation';
 
@@ -21,11 +22,16 @@ function message(error: unknown) {
 }
 
 export function registerChatSocket(io: Server) {
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
       if (typeof token !== 'string') return next(new Error('Authentication token is required'));
       const decoded = jwt.verify(token, config.jwt.accessSecret) as SocketUser;
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { isBanned: true },
+      });
+      if (!user || user.isBanned) return next(new Error('Your account has been banned'));
       (socket as SocketWithUser).user = decoded;
       next();
     } catch {
